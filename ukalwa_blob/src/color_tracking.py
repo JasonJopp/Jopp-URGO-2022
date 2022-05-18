@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 11 14:34:34 2017
-
-@author: ukalwa
-"""
 import cv2
 import numpy as np
 
 def dummy(x):
     pass
 
+# Prints x,y coordinate where image is clicked by user
 def onmouse(event,x,y,flags,params):
     global point
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -21,36 +16,36 @@ prev_point = None
 def get_color_of_object(image, hsv_image):
     global point, prev_point
     win_name = "Object Color identification"
-    #easy assigments
+    
+    # Creates different trackbars used in program, sets initial values
+    # H: Hue, S: Saturation, V: Value
     cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
     cv2.setMouseCallback(win_name,onmouse)
     cv2.createTrackbar('H Low', win_name,0,255,dummy)
-    cv2.createTrackbar('H High', win_name,11,255,dummy)
-    cv2.createTrackbar('S Low', win_name,90,255,dummy)
+    cv2.createTrackbar('H High', win_name,255,255,dummy)
+    cv2.createTrackbar('S Low', win_name,0,255,dummy)
     cv2.createTrackbar('S High', win_name,255,255,dummy)
-    cv2.createTrackbar('V Low', win_name,187,255,dummy)
+    cv2.createTrackbar('V Low', win_name,0,255,dummy)
     cv2.createTrackbar('V High', win_name,255,255,dummy)
+    
     while(1):
-
-        #read trackbar positions for all
-        hul=cv2.getTrackbarPos('H Low', win_name)
-        huh=cv2.getTrackbarPos('H High', win_name)
-        sal=cv2.getTrackbarPos('S Low', win_name)
-        sah=cv2.getTrackbarPos('S High', win_name)
-        val=cv2.getTrackbarPos('V Low', win_name)
-        vah=cv2.getTrackbarPos('V High', win_name)
-        #make array for final values
+        # Returns current low/high positions of trackbars
+        hul = cv2.getTrackbarPos('H Low', win_name)
+        huh = cv2.getTrackbarPos('H High', win_name)
+        sal = cv2.getTrackbarPos('S Low', win_name)
+        sah = cv2.getTrackbarPos('S High', win_name)
+        val = cv2.getTrackbarPos('V Low', win_name)
+        vah = cv2.getTrackbarPos('V High', win_name)
+        
+        # make array for final values
         hsv_low=np.array([hul,sal,val])
         hsv_high=np.array([huh,sah,vah])
     
-        #apply the range on a mask
+        # apply the range on a mask
         mask = cv2.inRange(hsv_image,hsv_low, hsv_high)
         res = cv2.bitwise_and(image,image, mask = mask)
         cv2.imshow("bit and",res)
-        
-#        img = watershed_transform(np.copy(res),mask)
-        
-#            cv2.rectangle(image_copy,(x,y),(x+w,y+h),(255,0,0),2)
+
         image_copy,count = detect_object_single_frame(image,res, point, prev_point)
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(image_copy,'Press q to cancel, c to confirm',(10,30), font, 1,(255,0,0),2)

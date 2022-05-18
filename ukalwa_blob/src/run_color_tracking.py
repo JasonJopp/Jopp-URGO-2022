@@ -1,25 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Apr 11 14:49:49 2017
-
-@author: ukalwa
-"""
-
 import cv2
 
 from color_tracking import get_color_of_object, detect_object
-#import Tkinter as tk
-#import tkFileDialog as filedialog
-
-#root = tk.Tk()
-#root.withdraw()
-#file_path = filedialog.askopenfilename()
 
 cv2.__file__
 win_name = "Object Color identification"
 cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
-#NOTE: Jopp Not sure why VideoCapture is set to -1, works with 0 too for camera 1
-print("This is a test.")
 vid = cv2.VideoCapture(0)
 bool_read, image = vid.read()
 frame = 0
