@@ -5,9 +5,13 @@ from color_tracking import get_color_of_object, detect_object
 cv2.__file__
 win_name = "Object Color identification"
 cv2.namedWindow(win_name, cv2.WINDOW_NORMAL)
+
 vid = cv2.VideoCapture(0)
+
 bool_read, image = vid.read()
+
 frame = 0
+
 if bool_read:
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     (ret, hsv_low, hsv_high) = get_color_of_object(image, hsv_image)

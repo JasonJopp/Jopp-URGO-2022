@@ -1,7 +1,6 @@
 import cv2 as cv
 
 def create_video_feed():
-
 	# Selects camera to use
 	capture = cv.VideoCapture(0)
 
@@ -22,5 +21,3 @@ def create_video_feed():
 	# Releases capture
 	capture.release()
 	cv.destroyAllWindows
-
-create_video_feed()
