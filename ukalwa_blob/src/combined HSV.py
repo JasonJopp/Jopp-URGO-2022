@@ -4,15 +4,17 @@ import cv2 as cv
 # Gets new position of trackbar when bar is moved
 def val(x):
 	pass
-	
+
+# Function for responding to mouse click events
+def click_event(event, x, y, flags, param):
+	# Runs on left click
+	if event == cv.EVENT_LBUTTONDOWN:
+		print(x, " ", y)
+				
+
 def combined():
 	# Selects camera to use
 	capture = cv.VideoCapture(0)
-	
-	# Finds height/width of video capture (feed)
-	# width = capture.get(cv.CAP_PROP_FRAME_WIDTH)
-	# height = capture.get(cv.CAP_PROP_FRAME_HEIGHT)
-	# print(height,width)
 	
 	# Checks if camera is found
 	if not capture.isOpened():
@@ -20,7 +22,7 @@ def combined():
 		exit()
 		
 	# Dictates the size of the window created, based on array
-	img = np.ones((1,400,1), np.uint8)
+	img = np.ones((1,509,1), np.uint8)
 	
 	cv.namedWindow('Color Settings')
 
@@ -35,6 +37,10 @@ def combined():
 
 	# Tells user how to close program
 	print("Press 'q' to quit.")
+	
+	# Flag for initial setup of while loop for windows
+	# This flag is for things I only want to run once in the loop
+	init_window = True
 	
 	# Displays window until 'q' is pressed
 	while(True):
@@ -65,13 +71,26 @@ def combined():
 		res = cv.bitwise_and(hsv, hsv, mask = mask)
 		
 		# Resizes feeds to be smaller (orig: 640, 480)
-		frame = cv.resize(frame, (240,180))
-		mask = cv.resize(mask, (240,180))
+		frame = cv.resize(frame, (252,189))
+		mask = cv.resize(mask, (252,189))
+		res = cv.resize(res, (500,375)) #.78125% original size
 		
 		# Displays different frames until 'q' is pressed
 		cv.imshow('frame',frame)
 		cv.imshow('mask', mask)
 		cv.imshow('res', res)
+		
+		# This section only runs things in this loop once, for setup
+		if (init_window == True):
+			# Moves windows prevent stacking
+			cv.moveWindow("Color Settings", 0, 0)
+			cv.moveWindow("frame", 255, 405)
+			cv.moveWindow("mask", 0, 405)
+			cv.moveWindow("res", 508, 0)
+			init_window = False
+		
+		# Function called when mouse event happens in frame
+		cv.setMouseCallback('frame', click_event)
 		
 		# Waits for 'q' to close program
 		if cv.waitKey(1) & 0xFF == ord('q'):
