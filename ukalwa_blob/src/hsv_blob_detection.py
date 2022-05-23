@@ -15,7 +15,6 @@ def click_event(event, x, y, flags, param):
 	# Runs on left click
 	if event == cv.EVENT_LBUTTONDOWN:
 		print(x, " ", y)
-				
 
 def combined():
 	global changes
@@ -38,8 +37,12 @@ def combined():
 
 	# Creates the different trackbars for blob detection thresholds
 	# <bar name>, <win location>, <init val>, <max val>, <rtrn bar val>
-	cv.createTrackbar('Low', 'Settings', 0, 255, change_detector)
-	cv.createTrackbar('High', 'Settings', 255, 255, change_detector)
+	cv.createTrackbar('H Low', 'Settings', 0, 255, change_detector)
+	cv.createTrackbar('H High', 'Settings', 255, 255, change_detector)
+	cv.createTrackbar('S Low', 'Settings', 0, 255, change_detector)
+	cv.createTrackbar('S High', 'Settings', 255, 255, change_detector)
+	cv.createTrackbar('V Low', 'Settings', 0, 255, change_detector)
+	cv.createTrackbar('V High', 'Settings', 255, 255, change_detector)
 	cv.createTrackbar('Min Area', 'Settings', 0, 200000, change_detector)
 	cv.createTrackbar('Max Area', 'Settings', 200000, 200000, change_detector)
 	cv.createTrackbar('Filter Circularity?', 'Settings', 0, 1, change_detector)
@@ -57,16 +60,26 @@ def combined():
 	# Displays window until 'q' is pressed
 	while(True):
 		cv.imshow("Settings",img)
-			
+		
+		# Captures each frame
+		ret, frame = capture.read()
+		
+		# Creates GRAY frame
+		hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+		
 		# Only creates a new detector if changes were made to the params
 		if changes:
 			changes = False
-			grayLow = cv.getTrackbarPos('Low', 'Settings')
-			grayHigh = cv.getTrackbarPos('High', 'Settings')
+			hLow = cv.getTrackbarPos('H Low', 'Settings')
+			hHigh = cv.getTrackbarPos('H High', 'Settings')
+			sLow = cv.getTrackbarPos('S Low', 'Settings')
+			sHigh = cv.getTrackbarPos('S High', 'Settings')
+			vLow = cv.getTrackbarPos('V Low', 'Settings')
+			vHigh = cv.getTrackbarPos('V High', 'Settings')
 		
 			# Sets blob detection parameters to trackbar
-			params.minThreshold = grayLow
-			params.maxThreshold = grayHigh
+			params.minThreshold = vLow
+			params.maxThreshold = vHigh
 			params.minArea = cv.getTrackbarPos('Min Area', 'Settings')
 			params.maxArea = cv.getTrackbarPos('Max Area', 'Settings')
 			if (cv.getTrackbarPos('Filter Circularity?', 'Settings') == 1):
@@ -76,41 +89,25 @@ def combined():
 			else:
 				params.filterByCircularity = False
 			
-			detector = cv.SimpleBlobDetector_create(params)
+			detector = cv.SimpleBlobDetector_create(params) 
 		
-		# Captures each frame
-		ret, frame = capture.read()
+		# Creates mask for hsvFrame, large CPU performance sink
+		mask = cv.inRange(hsvFrame, (hLow, sLow, vLow), (hHigh, sHigh, vHigh))
 		
-		# Creates GRAY frame
-		grayFrame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-		
-		# Creates mask for grayFrame, large CPU performance sink
-		mask = cv.inRange(grayFrame, grayLow, grayHigh)
-		
+		# Detects blobs, creates frame for displaying blobs
 		blobs = detector.detect(cv.bitwise_not(mask))
-			
-		grayWithBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-		
-		# Creates mask for grayFrame
-		mask = cv.inRange(grayFrame,grayLow, grayHigh)
-		
-		# Resizes feeds to be smaller (orig: 640, 480)
-		####frame = cv.resize(frame, (252,189))
-		####mask = cv.resize(mask, (252,189))
-		####grayWithBlobs = cv.resize(grayWithBlobs, (500,375)) #.78125% original size
+		hsvBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 		
 		# Displays different frames until 'q' is pressed
-		cv.imshow('frame',frame)
 		cv.imshow('mask',mask)
-		cv.imshow('grayWithBlobs', grayWithBlobs)
+		cv.imshow('hsvBlobs', hsvBlobs)
 		
 		# This section only runs things in this loop once, for setup
 		if (init_window == True):
 			# Moves windows prevent stacking
-			cv.moveWindow("Settings", 0, 0)
-			cv.moveWindow("frame", 512, 0)
-			cv.moveWindow("mask", 768, 0)
-			cv.moveWindow("grayWithBlobs", 512, 220)
+			cv.moveWindow('Settings', 0, 0)
+			cv.moveWindow('mask', 512, 0)
+			cv.moveWindow('hsvBlobs', 1155, 0)
 			init_window = False
 		
 		# Function called when mouse event happens in frame
