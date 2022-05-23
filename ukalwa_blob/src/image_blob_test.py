@@ -1,11 +1,9 @@
 import numpy as np
 import cv2 as cv
 
-# This flag tracks whether the detector needs to be reconstructed
-# if new params are set for the detector
+# Return function for trackbars, sets changes flag to True
 changes = True
 
-# Return function for trackbars, sets changes flag to True
 def change_detector(x):
 	global changes
 	changes = True
@@ -22,14 +20,6 @@ def combined():
 	
 	# Initializes thresholds for blob detection
 	params = cv.SimpleBlobDetector_Params()
-	
-	# Selects camera to use
-	capture = cv.VideoCapture(0)
-	
-	# Checks if camera is found
-	if not capture.isOpened():
-		print("Cannot find camera")
-		exit()
 		
 	# Dictates the size of the window created, based on array
 	img = np.ones((1,509,1), np.uint8)
@@ -56,11 +46,17 @@ def combined():
 	
 	# Displays window until 'q' is pressed
 	while(True):
-		cv.imshow("Settings",img)
-			
+		# Captures each image as if it were a video frame
+		frame = cv.imread("cvShapes.png", cv.IMREAD_COLOR)
+		
+		# Creates GRAY frame
+		grayFrame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+		
 		# Only creates a new detector if changes were made to the params
+		# Saves around 4-10% CPU usage, must test with tracking in video
 		if changes:
 			changes = False
+			# Gets trackbar locations for mask
 			grayLow = cv.getTrackbarPos('Low', 'Settings')
 			grayHigh = cv.getTrackbarPos('High', 'Settings')
 		
@@ -69,6 +65,8 @@ def combined():
 			params.maxThreshold = grayHigh
 			params.minArea = cv.getTrackbarPos('Min Area', 'Settings')
 			params.maxArea = cv.getTrackbarPos('Max Area', 'Settings')
+			
+			# Uses circularity circ switch is set to on when running
 			if (cv.getTrackbarPos('Filter Circularity?', 'Settings') == 1):
 				params.filterByCircularity = True
 				params.minCircularity = cv.getTrackbarPos('Min Circ', 'Settings')/1000
@@ -76,23 +74,15 @@ def combined():
 			else:
 				params.filterByCircularity = False
 			
+			# Creates detector using set params
 			detector = cv.SimpleBlobDetector_create(params)
 		
-		# Captures each frame
-		ret, frame = capture.read()
-		
-		# Creates GRAY frame
-		grayFrame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-		
-		# Creates mask for grayFrame, large CPU performance sink
+		# Creates mask for grayFrame
 		mask = cv.inRange(grayFrame, grayLow, grayHigh)
 		
+		# Uses mask to create new frame with detected blobs
 		blobs = detector.detect(cv.bitwise_not(mask))
-			
 		grayWithBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-		
-		# Creates mask for grayFrame
-		mask = cv.inRange(grayFrame,grayLow, grayHigh)
 		
 		# Resizes feeds to be smaller (orig: 640, 480)
 		frame = cv.resize(frame, (252,189))
@@ -100,6 +90,7 @@ def combined():
 		grayWithBlobs = cv.resize(grayWithBlobs, (500,375)) #.78125% original size
 		
 		# Displays different frames until 'q' is pressed
+		cv.imshow('Settings',img)
 		cv.imshow('frame',frame)
 		cv.imshow('mask',mask)
 		cv.imshow('grayWithBlobs', grayWithBlobs)
@@ -120,10 +111,8 @@ def combined():
 		if cv.waitKey(1) & 0xFF == ord('q'):
 			break
 	
-	# Releases capture
-	capture.release()
-	
 	# Closes all windows
 	cv.destroyAllWindows
 
+# Runs function
 combined()

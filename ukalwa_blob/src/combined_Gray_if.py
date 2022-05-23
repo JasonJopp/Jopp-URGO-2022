@@ -57,7 +57,13 @@ def combined():
 	# Displays window until 'q' is pressed
 	while(True):
 		cv.imshow("Settings",img)
-			
+		
+		# Captures each frame
+		ret, frame = capture.read()
+		
+		# Creates GRAY frame
+		grayFrame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+		
 		# Only creates a new detector if changes were made to the params
 		if changes:
 			changes = False
@@ -76,18 +82,15 @@ def combined():
 			else:
 				params.filterByCircularity = False
 			
+			# Creates mask for grayFrame, large CPU performance sink
+			mask = cv.inRange(grayFrame, grayLow, grayHigh)
+			
 			detector = cv.SimpleBlobDetector_create(params)
 		
-		# Captures each frame
-		ret, frame = capture.read()
 		
-		# Creates GRAY frame
-		grayFrame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-		
-		# Creates mask for grayFrame, large CPU performance sink
-		mask = cv.inRange(grayFrame, grayLow, grayHigh)
 		
 		blobs = detector.detect(cv.bitwise_not(mask))
+		print(blobs)
 			
 		grayWithBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 		
