@@ -85,22 +85,21 @@ def combined():
 			# Creates mask for grayFrame, large CPU performance sink
 			mask = cv.inRange(grayFrame, grayLow, grayHigh)
 			
-			detector = cv.SimpleBlobDetector_create(params)
+			detector = cv.SimpleBlobDetector_create(params) 
 		
 		
 		
 		blobs = detector.detect(cv.bitwise_not(mask))
-		print(blobs)
 			
 		grayWithBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 		
 		# Creates mask for grayFrame
-		mask = cv.inRange(grayFrame,grayLow, grayHigh)
+		mask = cv.inRange(grayFrame, grayLow, grayHigh)
 		
 		# Resizes feeds to be smaller (orig: 640, 480)
-		frame = cv.resize(frame, (252,189))
-		mask = cv.resize(mask, (252,189))
-		grayWithBlobs = cv.resize(grayWithBlobs, (500,375)) #.78125% original size
+		#frame = cv.resize(frame, (252,189))
+		#mask = cv.resize(mask, (252,189))
+		#grayWithBlobs = cv.resize(grayWithBlobs, (500,375)) #.78125% original size
 		
 		# Displays different frames until 'q' is pressed
 		cv.imshow('frame',frame)

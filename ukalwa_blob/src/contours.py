@@ -81,30 +81,56 @@ def combined():
 		# Captures each frame
 		ret, frame = capture.read()
 		
+		hsv_image = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+		hsv_isolate = cv.inRange(hsv_image,(params.minThreshold,0,0),(params.maxThreshold,255,255))
+		
+		#hsv_gray = cv.cvtColor(hsv_isolate, cv.COLOR_HSV2GRAY)
+		cv.imshow('hsv filtered',hsv_isolate)
+		
+		#h,s,hsv_gray = cv.split(hsv_isolate)
+		
+		
+		frame = cv.imread('cvShapes.png')
+		
+		cv.imshow('original',frame)
+		
 		# Creates GRAY frame
 		grayFrame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 		
-		# Creates mask for grayFrame, large CPU performance sink
-		mask = cv.inRange(grayFrame, grayLow, grayHigh)
+		cv.imshow('gray',grayFrame)
 		
-		blobs = detector.detect(cv.bitwise_not(mask))
+		#geeksforgeeks.org/find-and-draw-contours-using-opencv-python
+		
+		edged = cv.Canny(grayFrame, params.minThreshold, params.maxThreshold)
+		#edged = cv.Canny(hsv_gray, params.minThreshold, params.maxThreshold)
+		ecopy = edged.copy()
+		
+		contours, hierarchy = cv.findContours(ecopy,cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
+		cv.imshow('Canny',ecopy)
+		
+		
+		# Creates mask for grayFrame, large CPU performance sink
+		#mask = cv.inRange(grayFrame, grayLow, grayHigh)
+		
+		#blobs = detector.detect(cv.bitwise_not(mask))
 			
-		grayWithBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+		#grayWithBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 		
 		# Creates mask for grayFrame
-		mask = cv.inRange(grayFrame,grayLow, grayHigh)
+		#mask = cv.inRange(grayFrame,grayLow, grayHigh)
 		
 		# Resizes feeds to be smaller (orig: 640, 480)
-		####frame = cv.resize(frame, (252,189))
-		####mask = cv.resize(mask, (252,189))
-		####grayWithBlobs = cv.resize(grayWithBlobs, (500,375)) #.78125% original size
+		#frame = cv.resize(frame, (252,189))
+		#mask = cv.resize(mask, (252,189))
+		#grayWithBlobs = cv.resize(grayWithBlobs, (500,375)) #.78125% original size
 		
 		# Displays different frames until 'q' is pressed
-		cv.imshow('frame',frame)
-		cv.imshow('mask',mask)
-		cv.imshow('grayWithBlobs', grayWithBlobs)
+		#cv.imshow('frame',frame)
+		#cv.imshow('mask',mask)
+		#cv.imshow('grayWithBlobs', grayWithBlobs)
 		
 		# This section only runs things in this loop once, for setup
+		'''
 		if (init_window == True):
 			# Moves windows prevent stacking
 			cv.moveWindow("Settings", 0, 0)
@@ -115,7 +141,7 @@ def combined():
 		
 		# Function called when mouse event happens in frame
 		cv.setMouseCallback('frame', click_event)
-		
+		'''
 		# Waits for 'q' to close program
 		if cv.waitKey(1) & 0xFF == ord('q'):
 			break
