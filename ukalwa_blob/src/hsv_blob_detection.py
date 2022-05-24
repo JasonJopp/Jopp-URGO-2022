@@ -64,6 +64,11 @@ def combined():
 		
 		# Captures each frame, converts from BGR to HSV colorcode
 		ret, frame = capture.read()
+		
+		# Flips frame on y-axis
+		frame = cv.flip(frame,0)
+		
+		# Changes color format from BGR to HSV
 		hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 		
 		# Only creates a new detector if changes were made to the params
