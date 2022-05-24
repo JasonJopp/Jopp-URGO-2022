@@ -43,12 +43,12 @@ def combined():
 	cv.createTrackbar('S High', 'Settings', 255, 255, change_detector)
 	cv.createTrackbar('V Low', 'Settings', 0, 255, change_detector)
 	cv.createTrackbar('V High', 'Settings', 255, 255, change_detector)
-	cv.createTrackbar('Min Area', 'Settings', 0, 200000, change_detector)
+	cv.createTrackbar('Min Area', 'Settings', 50, 200000, change_detector)
 	cv.createTrackbar('Max Area', 'Settings', 200000, 200000, change_detector)
-	cv.createTrackbar('Filter Circularity?', 'Settings', 0, 1, change_detector)
-	cv.createTrackbar('Min Circ', 'Settings', 0, 1000, change_detector)
+	cv.createTrackbar('Min Circ', 'Settings', 300, 1000, change_detector)
 	cv.createTrackbar('Max Circ', 'Settings', 1000, 1000, change_detector)
 	cv.createTrackbar('Min Blob Dist', 'Settings', 0, 1000, change_detector)
+	cv.createTrackbar('Thresh Step', 'Settings', 254, 254, change_detector)
 	
 
 	# Tells user how to close program
@@ -62,10 +62,8 @@ def combined():
 	while(True):
 		cv.imshow("Settings",img)
 		
-		# Captures each frame
+		# Captures each frame, converts from BGR to HSV colorcode
 		ret, frame = capture.read()
-		
-		# Creates GRAY frame
 		hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 		
 		# Only creates a new detector if changes were made to the params
@@ -83,14 +81,22 @@ def combined():
 			params.maxThreshold = vHigh
 			params.minArea = cv.getTrackbarPos('Min Area', 'Settings')
 			params.maxArea = cv.getTrackbarPos('Max Area', 'Settings')
-			if (cv.getTrackbarPos('Filter Circularity?', 'Settings') == 1):
-				params.filterByCircularity = True
-				params.minCircularity = cv.getTrackbarPos('Min Circ', 'Settings')/1000
-				params.maxCircularity = cv.getTrackbarPos('Max Circ', 'Settings')/1000
-			else:
-				params.filterByCircularity = False
+			params.minCircularity = cv.getTrackbarPos('Min Circ', 'Settings')/1000
+			params.maxCircularity = cv.getTrackbarPos('Max Circ', 'Settings')/1000
 			params.minDistBetweenBlobs = cv.getTrackbarPos('Min Blob Dist', 'Settings')
+			# This prevents errors with threshold step size
+			# Step size must be less than than diff of vHigh and vLow
+			# Step size also cannot be zero
+			stepSize = abs(vHigh-vLow)
+			if (cv.getTrackbarPos('Thresh Step', 'Settings') >= stepSize):
+				if stepSize < 2:
+					params.thresholdStep = 1
+				else:
+					params.thresholdStep = stepSize - 1
+			elif (cv.getTrackbarPos('Thresh Step', 'Settings') > 0):
+				params.thresholdStep = cv.getTrackbarPos('Thresh Step', 'Settings')
 			
+			# Creates the detector object based on the set params
 			detector = cv.SimpleBlobDetector_create(params)
 		
 		# Creates mask for hsvFrame, large CPU performance sink
