@@ -48,6 +48,7 @@ def combined():
 	cv.createTrackbar('Filter Circularity?', 'Settings', 0, 1, change_detector)
 	cv.createTrackbar('Min Circ', 'Settings', 0, 1000, change_detector)
 	cv.createTrackbar('Max Circ', 'Settings', 1000, 1000, change_detector)
+	cv.createTrackbar('Min Blob Dist', 'Settings', 0, 1000, change_detector)
 	
 
 	# Tells user how to close program
@@ -88,8 +89,9 @@ def combined():
 				params.maxCircularity = cv.getTrackbarPos('Max Circ', 'Settings')/1000
 			else:
 				params.filterByCircularity = False
+			params.minDistBetweenBlobs = cv.getTrackbarPos('Min Blob Dist', 'Settings')
 			
-			detector = cv.SimpleBlobDetector_create(params) 
+			detector = cv.SimpleBlobDetector_create(params)
 		
 		# Creates mask for hsvFrame, large CPU performance sink
 		mask = cv.inRange(hsvFrame, (hLow, sLow, vLow), (hHigh, sHigh, vHigh))
