@@ -129,7 +129,13 @@ def combined():
 		# Waits for 'q' to close program
 		if cv.waitKey(1) & 0xFF == ord('q'):
 			break
-	
+		
+		# Prints the coordinates of blob #1, if only one blob exists
+		if 0 < len(blobs) < 2:	
+			xCoord = round(blobs[-1].pt[0])
+			yCoord = round(blobs[-1].pt[1])
+			print(xCoord, " ", yCoord)
+		
 	# Releases capture
 	capture.release()
 	
