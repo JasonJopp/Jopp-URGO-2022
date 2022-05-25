@@ -64,16 +64,16 @@ def drive(dir, timeout):
         
 def drive_second():
     #this is a simple code to run the wheels of the RVR forward
-    
+    print("Test 1")
     rvr.wake()
-
-    # Give RVR time to wake up
-    time.sleep(1)
-
-    rvr.reset_yaw()
     
+    # Give RVR time to wake up
+    #time.sleep(1)
+    print("Test 2")
+    rvr.reset_yaw()
+    print("Test 3")
     rvr.set_custom_control_system_timeout(command_timeout=535)  
-
+    print("Test 4")
     rvr.raw_motors(
             # could be adjusted to move in the reverse direction by changing forward to reverse
             left_mode=RawMotorModesEnum.reverse.value,   
@@ -84,5 +84,6 @@ def drive_second():
     
             
 if __name__ == '__main__':
+    print("Test 0")
     drive_second()
      
