@@ -53,12 +53,14 @@ def drive(dir, timeout):
             right_duty_cycle = SPEED
         )
     else:
+        print("Test 1")
         rvr.raw_motors(
             left_mode=RawMotorModesEnum.forward.value,   
             left_duty_cycle = SPEED,
             right_mode=RawMotorModesEnum.forward.value,
             right_duty_cycle = SPEED
         )
+        print("Test 2")
         
 
         
@@ -81,6 +83,7 @@ def drive_second():
             right_mode=RawMotorModesEnum.forward.value,
             right_duty_cycle = 140  # Valid duty cycle range is 0-255
         )
+    print("Test 5")
     
             
 if __name__ == '__main__':
