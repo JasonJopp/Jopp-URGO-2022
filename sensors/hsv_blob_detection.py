@@ -23,7 +23,7 @@ def combined():
 	params = cv.SimpleBlobDetector_Params()
 	
 	# Selects camera to use
-	capture = cv.VideoCapture(0)
+	capture = cv.VideoCapture(0, cv.CAP_ANY)
 	
 	# Checks if camera is found
 	if not capture.isOpened():
