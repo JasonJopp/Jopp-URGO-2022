@@ -124,7 +124,7 @@ def combined():
 			init_window = False
 		
 		# Function called when mouse event happens in frame
-		cv.setMouseCallback('frame', click_event)
+		#cv.setMouseCallback('frame', click_event)
 		
 		# Waits for 'q' to close program
 		if cv.waitKey(1) & 0xFF == ord('q'):
