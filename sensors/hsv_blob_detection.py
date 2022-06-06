@@ -118,9 +118,9 @@ def combined():
 		# This section only runs things in this loop once, for setup
 		if (init_window == True):
 			# Moves windows prevent stacking
-			cv.moveWindow('Settings', 0, 0)
-			cv.moveWindow('mask', 512, 0)
-			cv.moveWindow('hsvBlobs', 1155, 0)
+			cv.moveWindow('Settings', 0, 40)
+			cv.moveWindow('mask', 512, 40)
+			cv.moveWindow('hsvBlobs', 1155, 40)
 			init_window = False
 		
 		# Function called when mouse event happens in frame
