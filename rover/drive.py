@@ -2,10 +2,7 @@ import os
 import sys
 import time
 
-#sys.path.append('../')
-#sys.path.append('../..')
-#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
-sys.path.append('/home/pi/sphero-sdk-raspberrypi-python')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python')))
 
 from sphero_sdk import SpheroRvrObserver
 
@@ -23,9 +20,9 @@ def main():
     rvr.drive_control.reset_heading()
     
     rvr.drive_control.drive_forward_seconds(
-        speed=10,
+        speed=20,
         heading=0,
-        time_to_drive=1
+        time_to_drive=5
     )
 
 if __name__ == '__main__':

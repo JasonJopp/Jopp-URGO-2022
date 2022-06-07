@@ -18,6 +18,9 @@ def click_event(event, x, y, flags, param):
 
 def combined():
 	global changes
+
+	# Array is used to calculate the rolling average of coordinates
+	coords = []
 	
 	# Initializes thresholds for blob detection
 	params = cv.SimpleBlobDetector_Params()
@@ -130,12 +133,17 @@ def combined():
 		if cv.waitKey(1) & 0xFF == ord('q'):
 			break
 		
-		# Prints the coordinates of blob #1, if only one blob exists
+		# Creates rolling average of coordinates, dependant on windows_size
 		if 0 < len(blobs) < 2:	
 			xCoord = round(blobs[-1].pt[0])
 			yCoord = round(blobs[-1].pt[1])
-			print(xCoord, " ", yCoord)
-		
+			if (len(coords) > 5): # Change window size here to make examined array larger
+				del coords[0]
+			coords.append(tuple([xCoord,yCoord]))
+			avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
+			print(avgXY)
+
+			
 	# Releases capture
 	capture.release()
 	
