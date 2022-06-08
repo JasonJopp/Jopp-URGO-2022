@@ -21,6 +21,7 @@ def combined():
 
 	# Array is used to calculate the rolling average of coordinates
 	coords = []
+	avgXY = (0,0)
 	
 	# Initializes thresholds for blob detection
 	params = cv.SimpleBlobDetector_Params()
@@ -114,18 +115,6 @@ def combined():
 		blobs = detector.detect(cv.bitwise_not(mask))
 		hsvBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 		
-		# Displays different frames until 'q' is pressed
-		cv.imshow('mask',mask)
-		cv.imshow('hsvBlobs', hsvBlobs)
-		
-		# This section only runs things in this loop once, for setup
-		if (init_window == True):
-			# Moves windows prevent stacking
-			cv.moveWindow('Settings', 0, 40)
-			cv.moveWindow('mask', 512, 40)
-			cv.moveWindow('hsvBlobs', 1155, 40)
-			init_window = False
-		
 		# Function called when mouse event happens in frame
 		#cv.setMouseCallback('frame', click_event)
 		
@@ -137,11 +126,25 @@ def combined():
 		if 0 < len(blobs) < 2:	
 			xCoord = round(blobs[-1].pt[0])
 			yCoord = round(blobs[-1].pt[1])
-			if (len(coords) > 5): # Change window size here to make examined array larger
+			if (len(coords) > 20): # Change window size here to make examined array larger
 				del coords[0]
-			coords.append(tuple([xCoord,yCoord]))
+			coords.append((xCoord,yCoord))
 			avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
-			print(avgXY)
+		
+		hsvBlobs = cv.circle(hsvBlobs, (int(avgXY[0]),int(avgXY[1])), 20, (255,0,0), 2)
+
+		# Displays different frames until 'q' is pressed
+		cv.imshow('mask',mask)
+		cv.imshow('hsvBlobs', hsvBlobs)
+
+		# This section only runs things in this loop once, for setup
+		if (init_window == True):
+			# Moves windows prevent stacking
+			cv.moveWindow('Settings', 0, 40)
+			cv.moveWindow('mask', 512, 40)
+			cv.moveWindow('hsvBlobs', 1155, 40)
+			init_window = False
+		
 
 			
 	# Releases capture
