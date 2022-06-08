@@ -43,7 +43,7 @@ def combined():
 	# <bar name>, <win location>, <init val>, <max val>, <rtrn bar val>
 	cv.createTrackbar('H Low', 'Settings', 0, 255, change_detector)
 	cv.createTrackbar('H High', 'Settings', 255, 255, change_detector)
-	cv.createTrackbar('S Low', 'Settings', 0, 255, change_detector)
+	cv.createTrackbar('S Low', 'Settings', 50, 255, change_detector)
 	cv.createTrackbar('S High', 'Settings', 255, 255, change_detector)
 	cv.createTrackbar('V Low', 'Settings', 0, 255, change_detector)
 	cv.createTrackbar('V High', 'Settings', 255, 255, change_detector)
