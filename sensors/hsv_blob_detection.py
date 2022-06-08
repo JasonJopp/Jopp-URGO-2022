@@ -47,7 +47,7 @@ def combined():
 	cv.createTrackbar('S High', 'Settings', 255, 255, change_detector)
 	cv.createTrackbar('V Low', 'Settings', 0, 255, change_detector)
 	cv.createTrackbar('V High', 'Settings', 255, 255, change_detector)
-	cv.createTrackbar('Min Area', 'Settings', 50, 200000, change_detector)
+	cv.createTrackbar('Min Area', 'Settings', 300, 1000, change_detector)
 	cv.createTrackbar('Max Area', 'Settings', 200000, 200000, change_detector)
 	cv.createTrackbar('Min Circ', 'Settings', 300, 1000, change_detector)
 	cv.createTrackbar('Max Circ', 'Settings', 1000, 1000, change_detector)
@@ -110,6 +110,11 @@ def combined():
 		
 		# Creates mask for hsvFrame, large CPU performance sink
 		mask = cv.inRange(hsvFrame, (hLow, sLow, vLow), (hHigh, sHigh, vHigh))
+
+		# Sets "opening"/"closing" of mask (Morphology)
+		kernel = np.ones((5,5), np.uint8)
+		mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel, iterations = 2) # Removes false positives
+		mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel) # Removes false negatives
 		
 		# Detects blobs, creates frame for displaying blobs
 		blobs = detector.detect(cv.bitwise_not(mask))
@@ -126,7 +131,7 @@ def combined():
 		if 0 < len(blobs) < 2:	
 			xCoord = round(blobs[-1].pt[0])
 			yCoord = round(blobs[-1].pt[1])
-			if (len(coords) > 20): # Change window size here to make examined array larger
+			if (len(coords) > 10): # Change window size here to make examined array larger
 				del coords[0]
 			coords.append((xCoord,yCoord))
 			avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
