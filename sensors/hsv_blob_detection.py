@@ -10,12 +10,6 @@ def change_detector(x):
 	global changes
 	changes = True
 
-# Function for responding to mouse click events
-def click_event(event, x, y, flags, param):
-	# Runs on left click
-	if event == cv.EVENT_LBUTTONDOWN:
-		print(x, " ", y)
-
 def combined():
 	global changes
 
@@ -49,11 +43,11 @@ def combined():
 	cv.createTrackbar('V High', 'Settings', 255, 255, change_detector)
 	cv.createTrackbar('Min Area', 'Settings', 300, 1000, change_detector)
 	cv.createTrackbar('Max Area', 'Settings', 200000, 200000, change_detector)
-	cv.createTrackbar('Min Circ', 'Settings', 300, 1000, change_detector)
+	cv.createTrackbar('Min Circ', 'Settings', 150, 1000, change_detector)
 	cv.createTrackbar('Max Circ', 'Settings', 1000, 1000, change_detector)
 	cv.createTrackbar('Min Blob Dist', 'Settings', 0, 1000, change_detector)
 	cv.createTrackbar('Thresh Step', 'Settings', 254, 254, change_detector)
-	
+	cv.createTrackbar('Window Size', 'Settings', 10, 50, change_detector)
 
 	# Tells user how to close program
 	print("Press 'q' to quit.")
@@ -84,6 +78,9 @@ def combined():
 			sHigh = cv.getTrackbarPos('S High', 'Settings')
 			vLow = cv.getTrackbarPos('V Low', 'Settings')
 			vHigh = cv.getTrackbarPos('V High', 'Settings')
+			windowSize = cv.getTrackbarPos('Window Size', 'Settings')
+			if windowSize == 0:
+				windowSize = 1
 		
 			# Sets blob detection parameters to trackbar
 			params.minThreshold = vLow
@@ -131,7 +128,7 @@ def combined():
 		if 0 < len(blobs) < 2:	
 			xCoord = round(blobs[-1].pt[0])
 			yCoord = round(blobs[-1].pt[1])
-			if (len(coords) > 10): # Change window size here to make examined array larger
+			while (len(coords) >= windowSize): # Change window size here to make examined array larger
 				del coords[0]
 			coords.append((xCoord,yCoord))
 			avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
