@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import numpy as np
 import cv2 as cv
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -18,6 +19,7 @@ speed = 0
 heading = 0
 flags = 0
 changes = True
+blobCoolDown = 10
 
 loop = asyncio.get_event_loop()
 rvr = SpheroRvrAsync(
@@ -36,21 +38,12 @@ def keycode_callback(keycode):
     print("Key code updated: ", str(current_key_code))
 
 async def main():
-    """
-    Runs the main control loop for this demo.  Uses the KeyboardHelper class to read a keypress from the terminal.
-
-    W - Go forward.  Press multiple times to increase speed.
-    A - Decrease heading by -10 degrees with each key press.
-    S - Go reverse. Press multiple times to increase speed.
-    D - Increase heading by +10 degrees with each key press.
-    Spacebar - Reset speed and flags to 0. RVR will coast to a stop
-
-    """
     global current_key_code
     global speed
     global heading
     global flags
     global changes
+    global blobCoolDown
 
     # Array is used to calculate the rolling average of coordinates
     coords = []
@@ -161,22 +154,42 @@ async def main():
             break
 
         # Creates rolling average of coordinates, dependant on windows_size
-        if 0 < len(blobs) < 2:	
+        if len(blobs) == 1:	
             xCoord = round(blobs[-1].pt[0])
             yCoord = round(blobs[-1].pt[1])
             while (len(coords) >= windowSize): # Window size sets list size to be averaged into coordinate point
                 del coords[0]
             coords.append((xCoord,yCoord))
             avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
+            colorCode = (255,0,0)
+        else:
+            blobCoolDown -= 1
+            if blobCoolDown == 0:
+                coords.clear()
+                blobCoolDown = 10
+            colorCode = (0,0,255)
 
         # Simulating driving controls
-        if avgXY[0] < 320:
-            print('Turning left.')
-        elif avgXY[0] > 320:
-            print('Turning right.')
-
-        hsvBlobs = cv.circle(hsvBlobs, (int(avgXY[0]),int(avgXY[1])), 20, (255,0,0), 2)
-        hsvBlobs = cv.circle(hsvBlobs, (320,210), 5, (0,0,255), 3)
+        if avgXY[0] < 310:
+            
+            if avgXY[0] < 250:
+                print('Med left.')
+                heading = -10
+            else:
+                print('Sml left.')
+                heading = -5
+        elif 300 <= avgXY[0] <= 340:
+            print('Object centered.')
+            heading = 0
+        elif avgXY[0] > 330:
+            if avgXY[0] > 400:
+                print('Med right.')
+                heading = 10
+            else:
+                heading = 5
+                print('Sml right.')
+        hsvBlobs = cv.circle(hsvBlobs, (int(avgXY[0]),int(avgXY[1])), 20, colorCode, 2)
+        
 
         # Displays different frames until 'q' is pressed
         cv.imshow('mask',mask)

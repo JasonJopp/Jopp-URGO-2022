@@ -62,11 +62,6 @@ def combined():
 		
 		# Captures each frame, converts from BGR to HSV colorcode
 		ret, frame = capture.read()
-		
-		# Uncomment to flip frame on y-axis
-		#frame = cv.flip(frame,0)
-		
-		# Changes color format from BGR to HSV
 		hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 		
 		# Only creates a new detector if changes were made to the params
@@ -116,9 +111,6 @@ def combined():
 		# Detects blobs, creates frame for displaying blobs
 		blobs = detector.detect(cv.bitwise_not(mask))
 		hsvBlobs = cv.drawKeypoints(frame, blobs, np.array([]), (0,255,0), cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-		
-		# Function called when mouse event happens in frame
-		#cv.setMouseCallback('frame', click_event)
 		
 		# Waits for 'q' to close program
 		if cv.waitKey(1) & 0xFF == ord('q'):
