@@ -134,6 +134,7 @@ def combined():
 			avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
 		
 		hsvBlobs = cv.circle(hsvBlobs, (int(avgXY[0]),int(avgXY[1])), 20, (255,0,0), 2)
+		hsvBlobs = cv.circle(hsvBlobs, (320,210), 5, (0,0,255), 3)
 
 		# Displays different frames until 'q' is pressed
 		cv.imshow('mask',mask)
