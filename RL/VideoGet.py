@@ -21,36 +21,14 @@ class VideoGet:
         return self
     
     def get(self):
+        """Generates frames in a loop, self.frame can be retrieved elsewhere"""
         while not self.stopped:
             if not self.ret:
                 self.stop()
             else:
                 (self.ret, self.frame) = self.capture.read()
-                if (cv.waitKey(1) == ord('q')):
+                if (cv.waitKey(1) == ord('q')):    
                     break
     
     def stop(self):
         self.stopped = True
-
-##################################### Use the below in the main file
-"""
-import cv2 as cv
-from VideoGet import VideoGet
-
-def threadVideoGet(source = 0):
-
-    #Dedicated thread for grabbing video frames with VideoGet object.
-    #Main thread shows video frames.
-
-
-    video_getter = VideoGet(source).start()
-
-    while True:
-        if (cv.waitKey(1) == ord('q')) or video_getter.stopped:
-            video_getter.stop()
-            break
-        
-        frame = video_getter.frame
-        cv.imshow("Video", frame)
-
-"""
