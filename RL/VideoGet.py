@@ -2,7 +2,7 @@ from threading import Thread
 import cv2 as cv
 
 class VideoGet:
-    """Dedicated thread for getting frames from VideoCapture object."""
+    """Dedicated thread for getting frames from VideoGet object."""
 
     def __init__(self, src = 0):
         # Opens video capture, verifies capture is open
@@ -16,7 +16,7 @@ class VideoGet:
         self.stopped = False
     
     def start(self):
-        """Creates and starts a thread for VideoCapture."""
+        """Creates and starts a thread for VideoGet."""
         Thread(target = self.get, args = ()).start()
         return self
     
