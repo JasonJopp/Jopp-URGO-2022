@@ -4,8 +4,7 @@ import asyncio
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
 
-from sphero_sdk import SpheroRvrAsync
-from sphero_sdk import SerialAsyncDal
+from sphero_sdk import SpheroRvrAsync, SerialAsyncDal
 from drive import driver
 
 loop = asyncio.get_event_loop()
@@ -20,7 +19,7 @@ rvr = SpheroRvrAsync(
 if __name__ == '__main__':
     try:
         loop.run_until_complete(
-            driver(rvr, "forward", 64)
+            driver(rvr, "forward")
         )
 
     except KeyboardInterrupt:
