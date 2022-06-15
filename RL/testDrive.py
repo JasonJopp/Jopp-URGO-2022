@@ -19,7 +19,7 @@ rvr = SpheroRvrAsync(
 if __name__ == '__main__':
     try:
         loop.run_until_complete(
-            driver(rvr, "forward")
+            driver(rvr, "reverse", 4.25)
         )
 
     except KeyboardInterrupt:
