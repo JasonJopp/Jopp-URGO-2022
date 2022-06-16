@@ -12,4 +12,7 @@ detector = createDetector()
 while True:
     ret, frame = capture.read()
     avgXY = blobDetector(frame, detector)
-    print(avgXY)
+    if np.isnan(avgXY[0]):
+        print("Wait, this isn't a number!")
+    else:
+        print(avgXY)

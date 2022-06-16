@@ -1,7 +1,8 @@
 import asyncio, time, numpy as np
 from sphero_sdk import RawMotorModesEnum
 
-async def driver(rvr, leftMode, rightMode, driveTime = 2, speed = 64,) -> None:
+async def driver(rvr, leftMode, rightMode, driveTime = 2, 
+    speed = 64, cmdName = "Unnamed Command") -> None:
     """
     Drives a given RVR in a given direction.
     Params: rover obj, left track drive mode (0,1,2), 
@@ -43,6 +44,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2, speed = 64,) -> None:
     await asyncio.sleep(1)
     
     await rvr.reset_yaw()
+
     while amountTimes > 0:   
         await rvr.raw_motors(
             left_mode=leftMode,

@@ -18,8 +18,9 @@ rvr = SpheroRvrAsync(
 
 if __name__ == '__main__':
     try:
+        command = [rvr, 1, 1, 5, 64, "Soft Left"]
         loop.run_until_complete(
-            driver(rvr, 1, 1, 3)
+            driver(*command)
         )
 
     except KeyboardInterrupt:
