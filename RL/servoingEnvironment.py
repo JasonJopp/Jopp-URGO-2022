@@ -23,14 +23,14 @@ class ServoingEnvironment:
         # ..drive time (seconds), speed, command name]
         # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
         self.actions = []
-        self.actions[0] = [rvr, 1, 2, 2, 64, "Hard Right"]
-        self.actions[1] = [rvr, 1, 2, 1, 64, "Right"]
-        self.actions[2] = [rvr, 1, 2, .5, 64, "Soft Right"]
-        self.actions[3] = [rvr, 1, 1, 1, 64, "Forward"]
-        self.actions[4] = [rvr, 2, 2, 1, 64, "Reverse"]
-        self.actions[5] = [rvr, 2, 1, .5, 64, "Soft Left"]
-        self.actions[6] = [rvr, 2, 1, 1, 64, "Left"]
-        self.actions[7] = [rvr, 2, 1, 2, 64, "Hard Left"]
+        self.actions.append([rvr, 1, 2, 2, 64, "Hard Right"])
+        self.actions.append([rvr, 1, 2, 1, 64, "Right"])
+        self.actions.append([rvr, 1, 2, .5, 64, "Soft Right"])
+        self.actions.append([rvr, 1, 1, 1, 64, "Forward"])
+        self.actions.append([rvr, 2, 2, 1, 64, "Reverse"])
+        self.actions.append([rvr, 2, 1, .5, 64, "Soft Left"])
+        self.actions.append([rvr, 2, 1, 1, 64, "Left"])
+        self.actions.append([rvr, 2, 1, 2, 64, "Hard Left"])
 
         # Gets number of possible actions
         self.num_of_actions = len(self.actions)

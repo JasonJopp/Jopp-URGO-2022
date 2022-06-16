@@ -1,3 +1,6 @@
+# NOTE: The purpose of this program is to test the OpenCV blob detection of an object.
+# This program is not required for the machine learning research.
+
 import numpy as np
 import cv2 as cv
 from detector import createDetector, blobDetector

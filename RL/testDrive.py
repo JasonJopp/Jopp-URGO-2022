@@ -1,3 +1,6 @@
+# NOTE: The purpose of this program is to test the Sphero Rover's drive functionality.
+# This program is not required for the machine learning research.
+
 import os
 import sys
 import asyncio
