@@ -1,5 +1,6 @@
 import servoingEnvironment
 import numpy as np
+import asyncio
 
 env = servoingEnvironment.ServoingEnvironment()            
 
@@ -22,7 +23,7 @@ for i in range(num_episodes):
     #Reset environment and get initial observation
     currentState = env.reset() # Defines state of system
     rAll = 0 # Quantifies rewards over time
-    winState = False # Defines if episode succeeded or failed
+    winStatus = False # Defines if episode succeeded or failed
     stepNumber = 0
 
     #The Q-Table learning algorithm
@@ -42,7 +43,7 @@ for i in range(num_episodes):
         print("Selected action",action)
 
         # Get new state and reward from environment
-        newState,reward,winState = env.step(action) # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
+        newState,reward,winStatus = asyncio.run(env.step(action)) # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
         print("Action performed. In state",newState,". reward:",reward)
 
         if (reward==1):
@@ -59,7 +60,7 @@ for i in range(num_episodes):
         currentState = newState
 
         # if success or fail, start a new episode
-        if winState == True:
+        if winStatus == True:
             break
 
     rList.append(rAll)

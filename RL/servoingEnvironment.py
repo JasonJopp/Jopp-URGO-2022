@@ -68,10 +68,10 @@ class ServoingEnvironment:
             state = self.no_blob
         return state
 
-    def step(self, action):
+    async def step(self, action):
         # Send action command to robot and get next state.
         driveParams = self.actions[action]
-        driver(*driveParams) # Runs drive command
+        await driver(*driveParams) # Runs drive command
         print(f"Driving with command: {driveParams[-1]}")
         new_state = self.get_state()
         reward = 0

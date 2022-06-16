@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import warnings
 
 # Sets global variables
 hLow = 150
@@ -94,7 +95,10 @@ def blobDetector(frame, detector):
             del coords[0]
         coords.append((np.nan,np.nan))
     # Averages and rounds coordinates along 0 axis, ignoring NaNs
-    avgXY = np.round_(np.nanmean(coords, axis=0))
+    # Warning is caught because anticipated warning with empty mean with NaNs.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        avgXY = np.round_(np.nanmean(coords, axis=0))
 
     return avgXY
 
