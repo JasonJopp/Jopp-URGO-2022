@@ -1,7 +1,7 @@
-import visual_servoing_env
+import servoingEnvironment
 import numpy as np
 
-env = visual_servoing_env.ServoingEnvironment()            
+env = servoingEnvironment.ServoingEnvironment()            
 
 #Initialize table with all zeros
 Q = np.zeros([env.num_of_states,env.num_of_actions])
