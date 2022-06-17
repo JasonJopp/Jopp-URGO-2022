@@ -1,5 +1,7 @@
+from cmath import isnan
 import numpy as np
 import cv2 as cv
+import warnings
 
 # This flag tracks whether the detector needs to be reconstructed
 # if new params are set for the detector
@@ -16,6 +18,8 @@ def combined():
 	# Array is used to calculate the rolling average of coordinates
 	coords = []
 	avgXY = (0,0)
+	sizes = []
+	avgSize = 0.0
 	
 	# Initializes thresholds for blob detection
 	params = cv.SimpleBlobDetector_Params()
@@ -118,14 +122,31 @@ def combined():
 		
 		# Creates rolling average of coordinates, dependant on windows_size
 		if 0 < len(blobs) < 2:	
-			xCoord = round(blobs[-1].pt[0])
-			yCoord = round(blobs[-1].pt[1])
+			xCoord = round(blobs[0].pt[0])
+			yCoord = round(blobs[0].pt[1])
+			size = round(blobs[-1].size)
 			while (len(coords) >= windowSize): # Change window size here to make examined array larger
 				del coords[0]
+				del sizes[0]
 			coords.append((xCoord,yCoord))
-			avgXY = np.round_(np.mean(coords, axis=0)) # Averages and rounds coordinates along 0 axis
+			sizes.append(size)
 		
-		hsvBlobs = cv.circle(hsvBlobs, (int(avgXY[0]),int(avgXY[1])), 20, (255,0,0), 2)
+		else:
+			while (len(coords) >= windowSize):
+				del coords[0]
+				del sizes[0]
+			coords.append((np.nan,np.nan))
+			sizes.append(np.nan)
+		
+		with warnings.catch_warnings():
+			warnings.simplefilter("ignore", category=RuntimeWarning)
+			avgXY = np.round_(np.nanmean(coords, axis=0))
+			avgSize = np.round_(np.nanmean(sizes, axis=0))
+
+		# Prints the average size of the blob
+		if not np.isnan(avgXY[0]):
+			hsvBlobs = cv.circle(hsvBlobs, (int(avgXY[0]),int(avgXY[1])), 20, (255,0,0), 2)
+			print(f"Avg Size: {avgSize}".ljust(20) + f"Avg XY: {round(avgXY[0]),round(avgXY[1])}")
 		hsvBlobs = cv.circle(hsvBlobs, (320,210), 5, (0,0,255), 3)
 
 		# Displays different frames until 'q' is pressed

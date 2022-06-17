@@ -55,8 +55,8 @@ class ServoingEnvironment:
     
     def get_state(self):
         ret, frame = self.capture.read()
-        avgXY = blobDetector(frame, self.detector)
-        if not np.isnan(avgXY[0]):
+        avgXY, avgSize = blobDetector(frame, self.detector)
+        if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
             state = int(avgXY[0]*self.image_divisions/640)
         else:
             state = self.no_blob

@@ -9,9 +9,12 @@ sLow = 80
 sHigh = 255
 vLow = 0
 vHigh = 255
-# Used to calculate the rolling average of coordinates
+# Used to calculate the rolling average of blob coordinates
 coords = []
 avgXY = (0,0)
+# Used to calculate the rolling average of blob sizes
+sizes = []
+avgSize = 0.0
 
 def createDetector():
     """
@@ -65,6 +68,9 @@ def blobDetector(frame, detector):
     global vHigh
     global coords
     global avgXY
+    global sizes
+    global avgSize
+
 
     # Converts BGR frame to HSV frame, because HSV is less sensitive to light changes
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
@@ -85,22 +91,29 @@ def blobDetector(frame, detector):
     if 0 < len(blobs) < 2:	
         xCoord = round(blobs[-1].pt[0])
         yCoord = round(blobs[-1].pt[1])
+        size = round(blobs[-1].size)
          # Change window size here to make examined array larger
         while (len(coords) >= 5):
             del coords[0]
+            del sizes[0]
         coords.append((xCoord,yCoord))
+        sizes.append(size)
         
     else:
         while (len(coords) >= 5):
             del coords[0]
+            del sizes[0]
         coords.append((np.nan,np.nan))
+        sizes.append(np.nan)
+
     # Averages and rounds coordinates along 0 axis, ignoring NaNs
     # Warning is caught because anticipated warning with empty mean with NaNs.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         avgXY = np.round_(np.nanmean(coords, axis=0))
+        avgSize = np.round_(np.nanmean(sizes, axis=0))
 
-    return avgXY
+    return avgXY, avgSize
 
 
 

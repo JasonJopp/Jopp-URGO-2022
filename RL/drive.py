@@ -27,7 +27,6 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
         print("DRIVE VARROR: lMode was not an int between 0-2, incl.")
         exit()
 
-
     # Used to drive the rover forward a certain amount of time, rover acts in
     # two second increments for UNK reason, this way the last movement can be
     # cut off at the 'finalTime' amount, with 'amountTimes' being how many 2
