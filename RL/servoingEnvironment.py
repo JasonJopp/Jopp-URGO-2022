@@ -1,7 +1,7 @@
 import os, sys, time, random, asyncio, numpy as np, cv2 as cv
 from time import sleep
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
-from sphero_sdk import SpheroRvrAsync, SerialAsyncDal
+from sphero_sdk import SpheroRvrObserver
 
 from drive import driver
 from detector import createDetector, blobDetector
@@ -9,14 +9,8 @@ from detector import createDetector, blobDetector
 class ServoingEnvironment:
 
     def __init__(self) -> None:
-        loop = asyncio.get_event_loop()
-
         # Creates RVR object
-        rvr = SpheroRvrAsync(
-            dal=SerialAsyncDal(
-                loop
-            )
-        )
+        rvr = SpheroRvrObserver()
 
         # Lists out actions that the rover can take.
         # NOTE: Legend: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
@@ -68,11 +62,11 @@ class ServoingEnvironment:
             state = self.no_blob
         return state
 
-    async def step(self, action):
+    def step(self, action):
         # Send action command to robot and get next state.
         driveParams = self.actions[action]
-        await driver(*driveParams) # Runs drive command
-        print(f"Driving with command: {driveParams[-1]}")
+        asyncio.run(driver(*driveParams))
+        print(f"Driving: {driveParams[-1]}")
         new_state = self.get_state()
         reward = 0
         done = False

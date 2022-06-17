@@ -1,4 +1,4 @@
-import asyncio, time, numpy as np
+import asyncio, numpy as np
 from sphero_sdk import RawMotorModesEnum
 
 async def driver(rvr, leftMode, rightMode, driveTime = 2, 
@@ -38,15 +38,15 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     amountTimes = int(np.floor(driveTime/2))
     finalTime = round(driveTime%2, 3)
 
-    await rvr.wake()
+    rvr.wake()
 
     # Gives the RVR time to wake up. Inconsistent without wake period.
     await asyncio.sleep(1)
     
-    await rvr.reset_yaw()
+    rvr.reset_yaw()
 
     while amountTimes > 0:   
-        await rvr.raw_motors(
+        rvr.raw_motors(
             left_mode=leftMode,
             left_duty_cycle=speed,
             right_mode=rightMode,
@@ -57,7 +57,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     
     # Performs additional movement if movetime wasn't divisible by two.
     if finalTime > 0:   
-        await rvr.raw_motors(
+        rvr.raw_motors(
             left_mode=leftMode,
             left_duty_cycle=speed,
             right_mode=rightMode,
@@ -65,7 +65,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
         )
         # Stops above movement depending on finaltime variable below.
         await asyncio.sleep(finalTime)
-        await rvr.raw_motors(
+        rvr.raw_motors(
             left_mode=0,
             left_duty_cycle=0,
             right_mode=0,

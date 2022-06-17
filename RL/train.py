@@ -13,12 +13,10 @@ gamma = .95 # Gamma setting for updating the Q-table
 num_episodes = 2
 
 #create lists to contain total rewards and steps per episode
-#jList = []
 rList = []
 
 for i in range(num_episodes):
     print("Beginning episode",i,"...")
-    #print(Q)
 
     #Reset environment and get initial observation
     currentState = env.reset() # Defines state of system
@@ -43,14 +41,16 @@ for i in range(num_episodes):
         print("Selected action",action)
 
         # Get new state and reward from environment
-        newState,reward,winStatus = asyncio.run(env.step(action)) # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
+        # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
+        # newState,reward,winStatus = asyncio.run(asyncio.gather(env.step(action)))
+        newState,reward,winState = env.step(action)
         print("Action performed. In state",newState,". reward:",reward)
 
         if (reward==1):
             # SUCCESS. update the table and start again.
             print("Goal Achieved!!")
 
-        print("NEW STATE",newState)
+        print("\nNEW STATE",newState)
 
         #Update Q-Table with new knowledge
         Q[currentState,action] = Q[currentState,action] + learningRate*(reward + gamma*np.max(Q[newState,:]) - Q[currentState,action])
