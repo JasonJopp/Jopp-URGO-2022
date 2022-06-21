@@ -36,7 +36,7 @@ def trainerFunc():
             # Runs initial setup once for each episode
             if initalSetup == True:
                 print("Beginning episode",i,"...")
-                currentState = env.reset(videoGetter.frame) # Defines initial state of the system
+                currentState = env.reset(videoGetter) # Defines initial state of the system
                 #Reset environment and get initial observation
                 rAll = 0 # Quantifies rewards over time
                 winStatus = False # Defines if episode succeeded or failed
@@ -59,7 +59,7 @@ def trainerFunc():
             # Get new state and reward from environment
             # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
             # newState,reward,winStatus = asyncio.run(asyncio.gather(env.step(action)))
-            newState,reward,winStatus = env.step(action, videoGetter.frame)
+            newState,reward,winStatus = env.step(action, videoGetter)
             print("Action performed. In state",newState,". reward:",reward)
 
             if (reward==1):

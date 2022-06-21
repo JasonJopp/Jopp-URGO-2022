@@ -1,7 +1,8 @@
-import os, sys, asyncio, numpy as np, cv2 as cv, random
+import os, sys, asyncio, numpy as np, cv2 as cv, random, time
 from time import sleep
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
 from sphero_sdk import SpheroRvrObserver
+from videoGet import VideoGet
 
 from drive import driver
 from detector import createDetector, blobDetector
@@ -54,14 +55,15 @@ class ServoingEnvironment:
 
         return restartDrive
     
-    def reset(self, frame):
+    def reset(self, videoGetter):
         # Put the robot in a starting position.
         print("RVR being reset")
         restartDriveCommand = self.randomRestart(self.rvr)
         asyncio.run(driver(*restartDriveCommand))
-        return self.get_state(frame)
+        return self.get_state(videoGetter)
     
-    def get_state(self, frame):
+    def get_state(self, videoGetter):
+        frame = videoGetter.frame
         avgXY, avgSize = blobDetector(frame, self.detector)
         cv.imshow('Frame', frame)
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
@@ -70,12 +72,13 @@ class ServoingEnvironment:
             state = self.no_blob
         return state
 
-    def step(self, action, frame):
+    def step(self, action, videoGetter):
         # Send action command to robot and get next state.
         driveParams = self.actions[action]
         asyncio.run(driver(*driveParams))
         print(f"Driving: {driveParams[-1]}")
-        new_state = self.get_state(frame)
+        new_state = self.get_state(videoGetter)
+
         reward = 0
         done = False
 
