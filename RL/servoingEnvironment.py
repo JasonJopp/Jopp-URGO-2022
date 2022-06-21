@@ -11,30 +11,21 @@ class ServoingEnvironment:
     def __init__(self) -> None:
         
         # Creates RVR object
-        rvr = SpheroRvrObserver()
+        self.rvr = SpheroRvrObserver()
 
         # Lists out actions that the rover can take.
         # NOTE: Legend: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
         # ..drive time (seconds), speed, command name]
         # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
         self.actions = []
-        self.actions.append([rvr, 1, 2, .5, 180, "Hard Right"])
-        self.actions.append([rvr, 1, 2, .2, 180, "Right"])
-        self.actions.append([rvr, 1, 2, .1, 180, "Soft Right"])
-        #self.actions.append([rvr, 1, 1, 1, 180, "Forward"])
-        #self.actions.append([rvr, 2, 2, 1, 180, "Reverse"])
-        self.actions.append([rvr, 2, 1, .1, 180, "Soft Left"])
-        self.actions.append([rvr, 2, 1, .2, 180, "Left"])
-        self.actions.append([rvr, 2, 1, .5, 180, "Hard Left"])
-
-        # Restart drive command, random in bounds given
-        restartLeftTrack = random.randint(1,2)
-        if restartLeftTrack == 1:
-            restartRightTrack = 2
-        else:
-            restartRightTrack = 1
-        self.restartDrive = [rvr, restartLeftTrack, restartRightTrack, 
-        random.uniform(.1,.5), 180, "Restart", [255,0,0]]
+        self.actions.append([self.rvr, 1, 2, .5, 180, "Hard Right"])
+        self.actions.append([self.rvr, 1, 2, .2, 180, "Right"])
+        self.actions.append([self.rvr, 1, 2, .1, 180, "Soft Right"])
+        #self.actions.append([self.rvr, 1, 1, 1, 180, "Forward"])
+        #self.actions.append([self.rvr, 2, 2, 1, 180, "Reverse"])
+        self.actions.append([self.rvr, 2, 1, .1, 180, "Soft Left"])
+        self.actions.append([self.rvr, 2, 1, .2, 180, "Left"])
+        self.actions.append([self.rvr, 2, 1, .5, 180, "Hard Left"])
 
         # Gets number of possible actions
         self.numActions = len(self.actions)
@@ -50,11 +41,24 @@ class ServoingEnvironment:
 
         # Creates a detector for blob detection, obj holds blob params
         self.detector = createDetector()
+
+    def randomRestart(self, rvr):
+        # Restart drive command, random in bounds given
+        restartLeftTrack = random.randint(1,2)
+        if restartLeftTrack == 1:
+            restartRightTrack = 2
+        else:
+            restartRightTrack = 1
+        restartDrive = [rvr, restartLeftTrack, restartRightTrack, 
+        random.uniform(.1,.5), 180, "Restart", [255,0,0]]
+
+        return restartDrive
     
     def reset(self, frame):
         # Put the robot in a starting position.
         print("RVR being reset")
-        asyncio.run(driver(*self.restartDrive))
+        restartDriveCommand = self.randomRestart(self.rvr)
+        asyncio.run(driver(*restartDriveCommand))
         return self.get_state(frame)
     
     def get_state(self, frame):

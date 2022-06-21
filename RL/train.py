@@ -12,7 +12,7 @@ Q = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8   
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 2
+numEpisodes = 99
 
 #create lists to contain total rewards and steps per episode
 rList = []
@@ -59,12 +59,13 @@ def trainerFunc():
             # Get new state and reward from environment
             # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
             # newState,reward,winStatus = asyncio.run(asyncio.gather(env.step(action)))
-            newState,reward,winState = env.step(action, videoGetter.frame)
+            newState,reward,winStatus = env.step(action, videoGetter.frame)
             print("Action performed. In state",newState,". reward:",reward)
 
             if (reward==1):
                 # SUCCESS. update the table and start again.
                 print("Goal Achieved!!")
+
 
             print("\nNEW STATE",newState)
 
@@ -78,7 +79,7 @@ def trainerFunc():
                 break
 
         rList.append(rAll)
-    print(Q) > 'qtable.txt'
+    print(Q)
 
 def main():
     trainerFunc()

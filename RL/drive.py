@@ -73,5 +73,6 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
             right_duty_cycle=0
         )
     rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
-    time.sleep(1)
+    time.sleep(.15)
+    #time.sleep(4)
     rvr.led_control.set_all_leds_rgb(red=255, green=255, blue=255)

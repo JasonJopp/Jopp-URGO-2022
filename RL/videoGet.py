@@ -8,6 +8,8 @@ class VideoGet:
     """
     def __init__(self, src=0):
         self.capture = cv.VideoCapture(src)
+        self.capture.set(cv.CAP_PROP_BUFFERSIZE, 1)
+
         if not self.capture.isOpened():
             print("Could not find camera.")
             exit()
