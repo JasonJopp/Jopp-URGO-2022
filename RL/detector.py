@@ -97,6 +97,7 @@ def blobDetector(frame, detector):
             del coords[0]
             del sizes[0]
         coords.append((xCoord,yCoord))
+        print(f"Blob Coords: {xCoord},{yCoord}")
         sizes.append(size)
         
     else:
@@ -114,6 +115,3 @@ def blobDetector(frame, detector):
         avgSize = np.round_(np.nanmean(sizes, axis=0))
 
     return avgXY, avgSize
-
-
-
