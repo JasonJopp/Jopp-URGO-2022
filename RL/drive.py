@@ -1,8 +1,8 @@
-import asyncio, numpy as np
-from sphero_sdk import RawMotorModesEnum
+import asyncio, numpy as np, time
+from sphero_sdk import RawMotorModesEnum, Colors
 
 async def driver(rvr, leftMode, rightMode, driveTime = 2, 
-    speed = 64, cmdName = "Unnamed Command") -> None:
+    speed = 64, cmdName = "Unnamed Command", colorCode = [0,255,0]) -> None:
     """
     Drives a given RVR in a given direction.
     Params: rover obj, left track drive mode (0,1,2), 
@@ -43,7 +43,9 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     await asyncio.sleep(1)
     
     rvr.reset_yaw()
-
+    
+    # Sets RVR leds to green when moving
+    rvr.led_control.set_all_leds_rgb(*colorCode)
     while amountTimes > 0:   
         rvr.raw_motors(
             left_mode=leftMode,
@@ -70,6 +72,6 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
             right_mode=0,
             right_duty_cycle=0
         )
-    
-    # I do not know if closing the RVR is needed.
-    #await rvr.close()
+    rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
+    time.sleep(1)
+    rvr.led_control.set_all_leds_rgb(red=255, green=255, blue=255)

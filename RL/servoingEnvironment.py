@@ -1,4 +1,4 @@
-import os, sys, asyncio, numpy as np, cv2 as cv, queue
+import os, sys, asyncio, numpy as np, cv2 as cv, random
 from time import sleep
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
 from sphero_sdk import SpheroRvrObserver
@@ -9,6 +9,7 @@ from detector import createDetector, blobDetector
 class ServoingEnvironment:
 
     def __init__(self) -> None:
+        
         # Creates RVR object
         rvr = SpheroRvrObserver()
 
@@ -17,14 +18,23 @@ class ServoingEnvironment:
         # ..drive time (seconds), speed, command name]
         # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
         self.actions = []
-        self.actions.append([rvr, 1, 2, 2, 64, "Hard Right"])
-        self.actions.append([rvr, 1, 2, 1, 64, "Right"])
-        self.actions.append([rvr, 1, 2, .5, 64, "Soft Right"])
-        #self.actions.append([rvr, 1, 1, 1, 64, "Forward"])
-        #self.actions.append([rvr, 2, 2, 1, 64, "Reverse"])
-        self.actions.append([rvr, 2, 1, .5, 64, "Soft Left"])
-        self.actions.append([rvr, 2, 1, 1, 64, "Left"])
-        self.actions.append([rvr, 2, 1, 2, 64, "Hard Left"])
+        self.actions.append([rvr, 1, 2, .5, 180, "Hard Right"])
+        self.actions.append([rvr, 1, 2, .2, 180, "Right"])
+        self.actions.append([rvr, 1, 2, .1, 180, "Soft Right"])
+        #self.actions.append([rvr, 1, 1, 1, 180, "Forward"])
+        #self.actions.append([rvr, 2, 2, 1, 180, "Reverse"])
+        self.actions.append([rvr, 2, 1, .1, 180, "Soft Left"])
+        self.actions.append([rvr, 2, 1, .2, 180, "Left"])
+        self.actions.append([rvr, 2, 1, .5, 180, "Hard Left"])
+
+        # Restart drive command, random in bounds given
+        restartLeftTrack = random.randint(1,2)
+        if restartLeftTrack == 1:
+            restartRightTrack = 2
+        else:
+            restartRightTrack = 1
+        self.restartDrive = [rvr, restartLeftTrack, restartRightTrack, 
+        random.uniform(.1,.5), 180, "Restart", [255,0,0]]
 
         # Gets number of possible actions
         self.numActions = len(self.actions)
@@ -44,11 +54,12 @@ class ServoingEnvironment:
     def reset(self, frame):
         # Put the robot in a starting position.
         print("RVR being reset")
-        #drive.drive(["right"],221)
+        asyncio.run(driver(*self.restartDrive))
         return self.get_state(frame)
     
     def get_state(self, frame):
         avgXY, avgSize = blobDetector(frame, self.detector)
+        cv.imshow('Frame', frame)
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
             state = int(avgXY[0]*self.image_divisions/640)
         else:
