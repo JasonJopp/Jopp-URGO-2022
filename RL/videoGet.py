@@ -29,7 +29,10 @@ class VideoGet:
                 self.stop()
             else:
                 (self.ret, self.frame) = self.capture.read()
+        
     
     def stop(self):
         """Stops the VideoCapture thread."""
         self.stopped = True
+        self.capture.release()
+        cv.destroyAllWindows()

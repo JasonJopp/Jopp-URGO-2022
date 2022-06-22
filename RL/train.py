@@ -11,7 +11,7 @@ Q = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8   
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 20
+numEpisodes = 2
 
 #create lists to contain total rewards and steps per episode
 rList = []
@@ -26,11 +26,10 @@ def trainerFunc():
 
         print("Beginning episode",i,"...")
         currentState = env.reset(videoGetter) # Defines initial state of the system
-        #Reset environment and get initial observation
         rAll = 0 # Quantifies rewards over time
         winStatus = False # Defines if episode succeeded or failed
 
-        #The Q-Table learning algorithm
+        # The Q-Table learning algorithm
         while stepNumber < 99: # Max amount of steps allowed before episode times out and fails
             
             
@@ -76,8 +75,10 @@ def trainerFunc():
 
     # Rotates the Q table 90 degrees, rounds values to fourth decimal, and prints table
     print(np.round(np.rot90(Q), decimals=4))
+    videoGetter.stop()
 
 def main():
     trainerFunc()
-
+    
 main()
+

@@ -44,7 +44,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     
     rvr.reset_yaw()
     
-    # Sets RVR leds to green when moving
+    # Sets RVR leds to green when moving, unless other color code given
     rvr.led_control.set_all_leds_rgb(*colorCode)
     while amountTimes > 0:   
         rvr.raw_motors(
@@ -72,7 +72,9 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
             right_mode=0,
             right_duty_cycle=0
         )
+    # Sets RVR leds to orange, to show it is pausing after moving for image collection
     rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
+    # Allows RVR to stop before taking a photo for analysis
     time.sleep(.15)
-    #time.sleep(4)
+    # Sets rover leds to white, waiting state
     rvr.led_control.set_all_leds_rgb(red=255, green=255, blue=255)

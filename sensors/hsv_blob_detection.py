@@ -111,6 +111,7 @@ def combined():
 		kernel = np.ones((5,5), np.uint8)
 		mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel, iterations = 2) # Removes false positives
 		mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel) # Removes false negatives
+		mask = cv.rectangle(mask, (0,0), (639,479), (0,0,0), 1)
 		
 		# Detects blobs, creates frame for displaying blobs
 		blobs = detector.detect(cv.bitwise_not(mask))
