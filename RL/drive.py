@@ -2,7 +2,7 @@ import asyncio, numpy as np, time
 from sphero_sdk import RawMotorModesEnum, Colors
 
 async def driver(rvr, leftMode, rightMode, driveTime = 2, 
-    speed = 64, cmdName = "Unnamed Command", colorCode = [0,255,0]) -> None:
+    speed = 64, cmdName = "Unnamed Command", colorCode = [255,255,255]) -> None:
     """
     Drives a given RVR in a given direction.
     Params: rover obj, left track drive mode (0,1,2), 
@@ -72,8 +72,6 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
             right_mode=0,
             right_duty_cycle=0
         )
-    # Sets RVR leds to orange, to show it is pausing after moving for image collection
-    rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
     # Allows RVR to stop before taking a photo for analysis
     time.sleep(.15)
     # Sets rover leds to white, waiting state

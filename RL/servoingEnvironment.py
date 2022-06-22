@@ -1,6 +1,6 @@
 import os, sys, asyncio, numpy as np, cv2 as cv, random
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
-from sphero_sdk import SpheroRvrObserver
+from sphero_sdk import SpheroRvrObserver, Colors
 from videoGet import VideoGet
 
 from drive import driver
@@ -52,7 +52,7 @@ class ServoingEnvironment:
         else:
             restartRightTrack = 1
         restartDrive = [rvr, restartLeftTrack, restartRightTrack, 
-        random.uniform(.1,.5), 180, "Restart", [255,0,0]]
+        random.uniform(.1,.5), 180, "Restart", [255,0,255]]
 
         return restartDrive
     
@@ -90,10 +90,14 @@ class ServoingEnvironment:
         if (new_state == self.reward_state):
             reward = 1
             done = True    # reached goal. done
+            self.rvr.led_control.set_all_leds_rgb(red=0, green=255, blue=0)
         elif (new_state == self.no_blob):
             reward = 0
             done = True    # failed. done.
+            self.rvr.led_control.set_all_leds_rgb(red=255, green=0, blue=0)
         else:
             reward = 0
+            # Sets RVR leds to orange, to show it is not finished
+            self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
         return new_state, reward, done
 
