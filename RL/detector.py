@@ -82,7 +82,7 @@ def blobDetector(frame, detector):
     kernel = np.ones((5,5), np.uint8)
     mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel, iterations = 2) # Removes false positives
     mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel) # Removes false negatives
-    # Rectangle allows blob detection along edge of frame, since blobs must be surrounded by black
+    # Rectangle allows blob detection when blob is on edge of frame
     mask = cv.rectangle(mask, (0,0), (639,479), (0,0,0), 1)
 
     # Detects blobs, creates frame for displaying blobs

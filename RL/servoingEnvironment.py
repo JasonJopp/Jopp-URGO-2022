@@ -68,6 +68,8 @@ class ServoingEnvironment:
         """
         frame = videoGetter.frame
         avgXY, avgSize = blobDetector(frame, self.detector)
+        if not np.isnan(avgXY[0]):
+            frame = cv.circle(frame, (int(avgXY[0]), int(avgXY[1])), int(avgSize//2), (0,255,0), 3)
         cv.imshow('Frame', frame)
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
             state = int(avgXY[0]*self.image_divisions/self.image_width)
