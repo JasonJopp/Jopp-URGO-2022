@@ -1,5 +1,4 @@
-import os, sys, asyncio, numpy as np, cv2 as cv, random, time
-from time import sleep
+import os, sys, asyncio, numpy as np, cv2 as cv, random
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
 from sphero_sdk import SpheroRvrObserver
 from videoGet import VideoGet
@@ -16,7 +15,7 @@ class ServoingEnvironment:
 
         # Lists out actions that the rover can take.
         # NOTE: Legend: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
-        # ..drive time (seconds), speed, command name]
+        # ..drive time (seconds), speed, command name, led color code]
         # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
         self.actions = []
         self.actions.append([self.rvr, 1, 2, .5, 180, "Hard Right"])
@@ -30,21 +29,23 @@ class ServoingEnvironment:
 
         # Gets number of possible actions
         self.numActions = len(self.actions)
-        self.image_divisions = 11
+        self.image_divisions = 7
+        # Additional state is for being off-camera
         self.numStates = self.image_divisions + 1
         self.image_width = 640
 
         # signifies blob is not in the visual field
         self.no_blob = self.numStates - 1
 
-        self.reward_state = (self.image_divisions)//2    # in the middle
+        # Gets middle slice of image divisions for reward state
+        self.reward_state = ((self.image_divisions)//2)
         self.current_state = self.no_blob
 
         # Creates a detector for blob detection, obj holds blob params
         self.detector = createDetector()
 
     def randomRestart(self, rvr):
-        # Restart drive command, random in bounds given
+        # Generates a random-ish drive command for restarting the test
         restartLeftTrack = random.randint(1,2)
         if restartLeftTrack == 1:
             restartRightTrack = 2
@@ -63,11 +64,13 @@ class ServoingEnvironment:
         return self.get_state(videoGetter)
     
     def get_state(self, videoGetter):
+        """Gets a video frame, searches for blobs in the frame using the detector,
+        """
         frame = videoGetter.frame
         avgXY, avgSize = blobDetector(frame, self.detector)
         cv.imshow('Frame', frame)
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
-            state = int(avgXY[0]*self.image_divisions/640)
+            state = int(avgXY[0]*self.image_divisions/self.image_width)
         else:
             state = self.no_blob
         return state

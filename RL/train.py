@@ -1,7 +1,6 @@
 import servoingEnvironment
 import numpy as np
 import cv2 as cv
-import time
 from videoGet import VideoGet
 
 env = servoingEnvironment.ServoingEnvironment()            
@@ -12,7 +11,7 @@ Q = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8   
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 99
+numEpisodes = 20
 
 #create lists to contain total rewards and steps per episode
 rList = []
@@ -23,24 +22,20 @@ videoGetter.start()
 
 def trainerFunc():    
     for i in range(numEpisodes):
-        
-        # Sets flag for initial setup to True, for use in each episode  
-        initalSetup = True
         stepNumber = 0
+
+        print("Beginning episode",i,"...")
+        currentState = env.reset(videoGetter) # Defines initial state of the system
+        #Reset environment and get initial observation
+        rAll = 0 # Quantifies rewards over time
+        winStatus = False # Defines if episode succeeded or failed
 
         #The Q-Table learning algorithm
         while stepNumber < 99: # Max amount of steps allowed before episode times out and fails
+            
+            
             if (cv.waitKey(1) == ord('q') or videoGetter.stopped):
                 videoGetter.stop()
-
-            # Runs initial setup once for each episode
-            if initalSetup == True:
-                print("Beginning episode",i,"...")
-                currentState = env.reset(videoGetter) # Defines initial state of the system
-                #Reset environment and get initial observation
-                rAll = 0 # Quantifies rewards over time
-                winStatus = False # Defines if episode succeeded or failed
-                initalSetup = False # Makes it so initial step only runs on first iteration
 
             print("Starting trial",stepNumber,"in state",currentState,"...")
             stepNumber+=1
@@ -54,20 +49,19 @@ def trainerFunc():
             action = np.argmax(Q[currentState,:] + np.random.randn(1,env.numActions)*(1./(i+1)))
             
             # Displays selected action
-            print("Selected action",action)
+            print("Performing Action:",action)
 
             # Get new state and reward from environment
             # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
             # newState,reward,winStatus = asyncio.run(asyncio.gather(env.step(action)))
             newState,reward,winStatus = env.step(action, videoGetter)
-            print("Action performed. In state",newState,". reward:",reward)
-
             if (reward==1):
                 # SUCCESS. update the table and start again.
-                print("Goal Achieved!!")
+                print(f"New State: {newState}. Reward: {reward}, Goal Achieved!!\n")
+            else:
+                print(f"New State: {newState}. Reward: {reward}\n")
 
-
-            print("\nNEW STATE",newState)
+            
 
             #Update Q-Table with new knowledge
             Q[currentState,action] = Q[currentState,action] + learningRate*(reward + gamma*np.max(Q[newState,:]) - Q[currentState,action])
@@ -79,7 +73,9 @@ def trainerFunc():
                 break
 
         rList.append(rAll)
-    print(Q)
+
+    # Rotates the Q table 90 degrees, rounds values to fourth decimal, and prints table
+    print(np.round(np.rot90(Q), decimals=4))
 
 def main():
     trainerFunc()

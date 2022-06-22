@@ -93,7 +93,7 @@ def blobDetector(frame, detector):
         yCoord = round(blobs[-1].pt[1])
         size = round(blobs[-1].size)
          # Change window size here to make examined array larger
-        while (len(coords) >= 5):
+        while (len(coords) >= 1):
             del coords[0]
             del sizes[0]
         coords.append((xCoord,yCoord))
@@ -101,7 +101,7 @@ def blobDetector(frame, detector):
         sizes.append(size)
         
     else:
-        while (len(coords) >= 5):
+        while (len(coords) >= 1):
             del coords[0]
             del sizes[0]
         coords.append((np.nan,np.nan))
