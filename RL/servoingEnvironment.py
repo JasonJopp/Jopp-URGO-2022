@@ -59,18 +59,29 @@ class ServoingEnvironment:
     def reset(self, videoGetter):
         # Put the robot in a starting position.
         print("RVR being reset")
-        restartDriveCommand = self.randomRestart(self.rvr)
-        asyncio.run(driver(*restartDriveCommand))
-        return self.get_state(videoGetter)
+        state = self.no_blob
+        while state == self.no_blob:
+            restartDriveCommand = self.randomRestart(self.rvr)
+            asyncio.run(driver(*restartDriveCommand))
+            state = self.get_state(videoGetter)
+        
+        return state
     
     def get_state(self, videoGetter):
         """Gets a video frame, searches for blobs in the frame using the detector,
         """
+        # Gets frame from videoGetter obj
         frame = videoGetter.frame
         avgXY, avgSize = blobDetector(frame, self.detector)
+        
+        # Draws circle on blob location, if available
         if not np.isnan(avgXY[0]):
             frame = cv.circle(frame, (int(avgXY[0]), int(avgXY[1])), int(avgSize//2), (0,255,0), 3)
+        
+        # Displays the frame in a new window
         cv.imshow('Frame', frame)
+
+        # Returns state dependent on if there is a blob on frame or not
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
             state = int(avgXY[0]*self.image_divisions/self.image_width)
         else:
@@ -85,19 +96,21 @@ class ServoingEnvironment:
         new_state = self.get_state(videoGetter)
 
         reward = 0
-        done = False
+        completeStatus = False
 
         if (new_state == self.reward_state):
             reward = 1
-            done = True    # reached goal. done
+            completeStatus = True
+            # reached goal. done, leds set to green
             self.rvr.led_control.set_all_leds_rgb(red=0, green=255, blue=0)
         elif (new_state == self.no_blob):
             reward = 0
-            done = True    # failed. done.
+            completeStatus = True
+            # failed. done, leds set to red
             self.rvr.led_control.set_all_leds_rgb(red=255, green=0, blue=0)
         else:
             reward = 0
-            # Sets RVR leds to orange, to show it is not finished
+            # Not done, still searching, leds set to orange
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
-        return new_state, reward, done
+        return new_state, reward, completeStatus
 

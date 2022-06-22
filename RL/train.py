@@ -27,7 +27,7 @@ def trainerFunc():
         print("Beginning episode",i,"...")
         currentState = env.reset(videoGetter) # Defines initial state of the system
         rAll = 0 # Quantifies rewards over time
-        winStatus = False # Defines if episode succeeded or failed
+        completeStatus = False # Defines if episode succeeded or failed
 
         # The Q-Table learning algorithm
         while stepNumber < 99: # Max amount of steps allowed before episode times out and fails
@@ -37,7 +37,7 @@ def trainerFunc():
                 videoGetter.stop()
 
             print("Starting trial",stepNumber,"in state",currentState,"...")
-            stepNumber+=1
+            stepNumber += 1
             #Choose an action by greedily (with noise) picking from Q table
 
             # random noise added to each column element in row "s"
@@ -52,8 +52,8 @@ def trainerFunc():
 
             # Get new state and reward from environment
             # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
-            # newState,reward,winStatus = asyncio.run(asyncio.gather(env.step(action)))
-            newState,reward,winStatus = env.step(action, videoGetter)
+            # newState,reward,completeStatus = asyncio.run(asyncio.gather(env.step(action)))
+            newState,reward,completeStatus = env.step(action, videoGetter)
             if (reward==1):
                 # SUCCESS. update the table and start again.
                 print(f"New State: {newState}. Reward: {reward}, Goal Achieved!!\n")
@@ -68,7 +68,7 @@ def trainerFunc():
             currentState = newState
 
             # if success or fail, start a new episode
-            if winStatus == True:
+            if completeStatus == True:
                 break
 
         rList.append(rAll)
