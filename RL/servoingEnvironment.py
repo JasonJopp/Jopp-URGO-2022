@@ -18,14 +18,14 @@ class ServoingEnvironment:
         # ..drive time (seconds), speed, command name, led color code]
         # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
         self.actions = []
-        self.actions.append([self.rvr, 1, 2, .5, 180, "Hard Right"])
-        self.actions.append([self.rvr, 1, 2, .2, 180, "Right"])
+        self.actions.append([self.rvr, 1, 2, .2, 180, "Hard Right"])
+        self.actions.append([self.rvr, 1, 2, .15, 180, "Right"])
         self.actions.append([self.rvr, 1, 2, .1, 180, "Soft Right"])
         #self.actions.append([self.rvr, 1, 1, 1, 180, "Forward"])
         #self.actions.append([self.rvr, 2, 2, 1, 180, "Reverse"])
         self.actions.append([self.rvr, 2, 1, .1, 180, "Soft Left"])
-        self.actions.append([self.rvr, 2, 1, .2, 180, "Left"])
-        self.actions.append([self.rvr, 2, 1, .5, 180, "Hard Left"])
+        self.actions.append([self.rvr, 2, 1, .15, 180, "Left"])
+        self.actions.append([self.rvr, 2, 1, .2, 180, "Hard Left"])
 
         # Gets number of possible actions
         self.numActions = len(self.actions)
@@ -57,12 +57,15 @@ class ServoingEnvironment:
         return restartDrive
     
     def reset(self, videoGetter):
-        # Put the robot in a starting position.
+        """This has the RVR place itself into a somewhat-random starting position by rotating"""
         print("RVR being reset")
         state = self.no_blob
+        restartDriveCommand = self.randomRestart(self.rvr)
+        asyncio.run(driver(*restartDriveCommand))
+        
+        # The RVR will rotate until it sees a blob. (Search mode)
         while state == self.no_blob:
-            restartDriveCommand = self.randomRestart(self.rvr)
-            asyncio.run(driver(*restartDriveCommand))
+            asyncio.run(driver(*[self.rvr, 1, 2, .1, 180, "Soft Right"]))
             state = self.get_state(videoGetter)
         
         return state
@@ -84,6 +87,7 @@ class ServoingEnvironment:
         # Returns state dependent on if there is a blob on frame or not
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
             state = int(avgXY[0]*self.image_divisions/self.image_width)
+            self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
         else:
             state = self.no_blob
         return state
