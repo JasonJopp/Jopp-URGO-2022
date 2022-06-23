@@ -99,7 +99,7 @@ def blobDetector(frame, detector):
             del coords[0]
             del sizes[0]
         coords.append((xCoord,yCoord))
-        print(f"Blob Coords: {xCoord},{yCoord}")
+        print(f"Blob Coords: {xCoord},{yCoord}  Blob Size: {size}")
         sizes.append(size)
         
     else:

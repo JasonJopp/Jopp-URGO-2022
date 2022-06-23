@@ -18,27 +18,33 @@ class ServoingEnvironment:
         # ..drive time (seconds), speed, command name, led color code]
         # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
         self.actions = []
-        self.actions.append([self.rvr, 1, 2, .2, 180, "Hard Right"])
-        self.actions.append([self.rvr, 1, 2, .15, 180, "Right"])
-        self.actions.append([self.rvr, 1, 2, .1, 180, "Soft Right"])
+        self.actions.append([self.rvr, 1, 2, .15, 180, "Hard Right"])
+        self.actions.append([self.rvr, 1, 2, .1, 180, "Right"])
+        self.actions.append([self.rvr, 1, 2, .05, 180, "Soft Right"])
         #self.actions.append([self.rvr, 1, 1, 1, 180, "Forward"])
         #self.actions.append([self.rvr, 2, 2, 1, 180, "Reverse"])
-        self.actions.append([self.rvr, 2, 1, .1, 180, "Soft Left"])
-        self.actions.append([self.rvr, 2, 1, .15, 180, "Left"])
-        self.actions.append([self.rvr, 2, 1, .2, 180, "Hard Left"])
+        self.actions.append([self.rvr, 2, 1, .05, 180, "Soft Left"])
+        self.actions.append([self.rvr, 2, 1, .1, 180, "Left"])
+        self.actions.append([self.rvr, 2, 1, .15, 180, "Hard Left"])
 
         # Gets number of possible actions
         self.numActions = len(self.actions)
         self.image_divisions = 7
-        # Additional state is for being off-camera
-        self.numStates = self.image_divisions + 1
+        
+        # Image width of video frame, can be found using OpenCV
         self.image_width = 640
+
+        # Used for returning the blob width state, which estimates how close a blob is
+        self.blobSizeStateDict = {20:0, 40:1, 60:2, 80:3, 90:4, 999999:5}
+
+        # Calculates total possible states, additional state is for no blob detected
+        self.numStates = (self.image_divisions * len(self.blobSizeStateDict)) + 1
 
         # signifies blob is not in the visual field
         self.no_blob = self.numStates - 1
 
         # Gets middle slice of image divisions for reward state
-        self.reward_state = ((self.image_divisions)//2)
+        self.reward_state = (((self.image_divisions)//2) * len(self.blobSizeStateDict)) + max(self.blobSizeStateDict.values())
         self.current_state = self.no_blob
 
         # Creates a detector for blob detection, obj holds blob params
@@ -54,20 +60,21 @@ class ServoingEnvironment:
         restartDrive = [rvr, restartLeftTrack, restartRightTrack, 
         random.uniform(.1,.5), 180, "Restart", [255,0,255]]
 
-        return restartDrive
+        return restartDrive, restartLeftTrack, restartRightTrack
     
     def reset(self, videoGetter):
         """This has the RVR place itself into a somewhat-random starting position by rotating"""
         print("RVR being reset")
         state = self.no_blob
-        restartDriveCommand = self.randomRestart(self.rvr)
+        restartDriveCommand, restartLeftTrack, restartRightTrack = self.randomRestart(self.rvr)
         asyncio.run(driver(*restartDriveCommand))
         
         # The RVR will rotate until it sees a blob. (Search mode)
         while state == self.no_blob:
-            asyncio.run(driver(*[self.rvr, 1, 2, .1, 180, "Soft Right"]))
             state = self.get_state(videoGetter)
-        
+            if state != self.no_blob:
+                break
+            asyncio.run(driver(*[self.rvr, restartLeftTrack, restartRightTrack, .2, 180, "Scanning"]))
         return state
     
     def get_state(self, videoGetter):
@@ -86,7 +93,17 @@ class ServoingEnvironment:
 
         # Returns state dependent on if there is a blob on frame or not
         if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
-            state = int(avgXY[0]*self.image_divisions/self.image_width)
+            # Gets the state of the x-coordinate of the blob
+            blobXLocationState = int(avgXY[0]*self.image_divisions/self.image_width)
+            # Gets the percentage size (blobRatio) of the blob, compared to the frame size (width)
+            blobRatio = int((avgSize/self.image_width)*100)
+            # Checks dictionary to assign blobSizeState to a number based on the blobRatio
+            for size in self.blobSizeStateDict:
+                if blobRatio < size:
+                    blobSizeState = self.blobSizeStateDict[size]
+                    break
+            # Combines the blob x-coordinate state and blob size into a single state
+            state = (blobXLocationState * len(self.blobSizeStateDict)) + blobSizeState
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
         else:
             state = self.no_blob
@@ -97,6 +114,7 @@ class ServoingEnvironment:
         driveParams = self.actions[action]
         asyncio.run(driver(*driveParams))
         print(f"Driving: {driveParams[-1]}")
+        print(f"Reward State: {self.reward_state}")
         new_state = self.get_state(videoGetter)
 
         reward = 0
