@@ -11,6 +11,15 @@
 import asyncio, numpy as np, time
 from sphero_sdk import RawMotorModesEnum, Colors
 
+def color_detected_handler(color_detected_data):
+    """Gets color information from RVRs color scanner."""
+    rgb = [
+        color_detected_data['ColorDetection']['R'],
+        color_detected_data['ColorDetection']['G'],
+        color_detected_data['ColorDetection']['B']
+        ]
+    return rgb
+
 async def driver(rvr, leftMode, rightMode, driveTime = 2, 
     speed = 64, cmdName = "Unnamed Command", colorCode = [255,255,255]):
     """
@@ -20,6 +29,9 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     command name, and led color code (RGB) to use when driving.
     NOTE: Right/Left track modes: 0 = stop, 1 = forward, 2 = reverse
     """
+
+    # This is the sample speed (ms) of the RVRs bottom facing color sensor
+    colorSampleSpeed = 50
 
     # Various checks on drive variables, must fall within these bounds to work
     if not (0 <= speed <= 255):
@@ -60,6 +72,9 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     # Sets RVR leds to white when moving, unless other color code given
     rvr.led_control.set_all_leds_rgb(*colorCode)
 
+    # Turns on the RVRs bottom facing color sensor
+    rvr.sensor_control.start(interval=colorSampleSpeed)
+
     # Runs the rover amount of two second increments to meet driveTime amount
     while amountTimes > 0:   
         rvr.raw_motors(
@@ -72,7 +87,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
         amountTimes -= 1
     
     # Runs sub-two-second movements if remaining driveTime != 2 seconds
-    if finalTime > 0:   
+    if finalTime > 0:
         rvr.raw_motors(
             left_mode=leftMode,
             left_duty_cycle=speed,
@@ -87,7 +102,12 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
             right_mode=0,
             right_duty_cycle=0
         )
+    
+    # Turns off the RVRs bottom facing color sensor
+    rvr.sensor_control.stop()
+
     # Gives RVR time to stop before taking a photo, otherwise image is blurry
     time.sleep(.15)
+    
     # Sets rover leds to white, default waiting state
     rvr.led_control.set_all_leds_rgb(red=255, green=255, blue=255)

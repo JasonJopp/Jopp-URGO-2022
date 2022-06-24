@@ -1,9 +1,9 @@
 import os, sys, asyncio, numpy as np, cv2 as cv, random
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
-from sphero_sdk import SpheroRvrObserver, Colors
+from sphero_sdk import SpheroRvrObserver, Colors, RvrStreamingServices
 from videoGet import VideoGet
 
-from drive import driver
+from drive import driver, color_detected_handler
 from detector import createDetector, blobDetector
 
 class ServoingEnvironment:
@@ -12,6 +12,13 @@ class ServoingEnvironment:
         
         # Creates RVR object
         self.rvr = SpheroRvrObserver()
+        # Enables the rovers bottom facing color sensor
+        self.rvr.enable_color_detection(is_enabled=True)
+        # Creates the handler for the RVR's color detection
+        self.rvr.sensor_control.add_sensor_data_handler(
+            service=RvrStreamingServices.color_detection,
+            handler=color_detected_handler
+        )
 
         # Lists out actions that the rover can take.
         # NOTE: Legend: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
@@ -21,8 +28,8 @@ class ServoingEnvironment:
         self.actions.append([self.rvr, 1, 2, .15, 180, "Hard Right"])
         self.actions.append([self.rvr, 1, 2, .1, 180, "Right"])
         self.actions.append([self.rvr, 1, 2, .05, 180, "Soft Right"])
-        #self.actions.append([self.rvr, 1, 1, 1, 180, "Forward"])
-        #self.actions.append([self.rvr, 2, 2, 1, 180, "Reverse"])
+        #self.actions.append([self.rvr, 1, 1, .25, 180, "Forward"])
+        #self.actions.append([self.rvr, 2, 2, .25, 180, "Reverse"])
         self.actions.append([self.rvr, 2, 1, .05, 180, "Soft Left"])
         self.actions.append([self.rvr, 2, 1, .1, 180, "Left"])
         self.actions.append([self.rvr, 2, 1, .15, 180, "Hard Left"])
