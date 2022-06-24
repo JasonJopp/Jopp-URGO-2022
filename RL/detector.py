@@ -10,15 +10,14 @@
 # 
 # blobDetector() then takes the detector objects and a image/video frame, 
 # examines the frame using the detector "lens" and returns the coordinates 
-# (x,y) and diameter (pixels) of the detected blob.
-
+# (x,y) and diameter (pixels) of the detected blob. The rolling average is
+# useful if there are some false positive when doing blob detection, otherwise
+# you can set the sampleSize variable to 1 and not perform averages
+#
 # Author(s): Jason Jopp, <your name here>
 # -----------------------------------------------------------------------------
 
-import numpy as np
-import cv2 as cv
-import warnings
-
+import cv2 as cv, numpy as np, warnings
 
 # Used set the low/high HSV colorspace values the detector searches between
 hLow = 150      # Hue low
@@ -96,7 +95,6 @@ def blobDetector(frame, detector):
     global sizes
     global avgSize
     global sampleSize
-
 
     # Converts BGR to HSV frame, because HSV is less sensitive to light changes
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)

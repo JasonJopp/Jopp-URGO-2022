@@ -1,3 +1,16 @@
+# -----------------------------------------------------------------------------
+# Code Purpose: To run video capture in a seperate thread, so that the frame
+# provided to the rest of the program is as recent as possible. If the capture
+# is not performed in a separate thread, the frames will quickly become old
+# and the RVR will take actions based on what it saw in the past, not what it
+# sees in the near-present.
+#
+# NOTE: Using imshow to display the frame likely won't show the current frame 
+# being analyzed by the servoring environment. It lags behind by a few frames.
+# 
+# Author(s): Jason Jopp, <your name here>
+# -----------------------------------------------------------------------------
+
 from threading import Thread
 import cv2 as cv
 

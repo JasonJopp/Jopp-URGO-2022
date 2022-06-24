@@ -8,7 +8,6 @@
 # Author(s): Jason Jopp, <your name here>
 # -----------------------------------------------------------------------------
 
-
 import asyncio, numpy as np, time
 from sphero_sdk import RawMotorModesEnum, Colors
 
