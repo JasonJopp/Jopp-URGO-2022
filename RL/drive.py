@@ -17,8 +17,9 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     """
     Drives a given RVR in a given direction.
     Params: rover obj, left track drive mode (0,1,2), 
-    right track drive mode (0,1,2), drive time (seconds), speed.
-    NOTE: Right/Left modes: 0 = stop, 1 = forward, 2 = reverse
+    right track drive mode (0,1,2), drive time (seconds), speed,
+    command name, and led color code (RGB) to use when driving.
+    NOTE: Right/Left track modes: 0 = stop, 1 = forward, 2 = reverse
     """
 
     # Various checks on drive variables, must fall within these bounds to work
@@ -54,12 +55,13 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     # Gives RVR time to wake up, RVR sometimes misses commands without this.
     await asyncio.sleep(1)
     
+    # Prevents old drive directions from interfering with new commands
     rvr.reset_yaw()
     
     # Sets RVR leds to white when moving, unless other color code given
     rvr.led_control.set_all_leds_rgb(*colorCode)
 
-    
+    # Runs the rover amount of two second increments to meet driveTime amount
     while amountTimes > 0:   
         rvr.raw_motors(
             left_mode=leftMode,
@@ -70,7 +72,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
         await asyncio.sleep(2)
         amountTimes -= 1
     
-    # Performs additional movement if driveTime is greater/less than 2 seconds
+    # Runs sub-two-second movements if remaining driveTime != 2 seconds
     if finalTime > 0:   
         rvr.raw_motors(
             left_mode=leftMode,
