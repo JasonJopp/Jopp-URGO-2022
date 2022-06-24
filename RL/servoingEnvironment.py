@@ -1,3 +1,4 @@
+from colorsys import rgb_to_hls
 import os, sys, asyncio, numpy as np, cv2 as cv, random
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
 from sphero_sdk import SpheroRvrObserver, Colors, RvrStreamingServices
@@ -12,13 +13,18 @@ class ServoingEnvironment:
         
         # Creates RVR object
         self.rvr = SpheroRvrObserver()
+        
         # Enables the rovers bottom facing color sensor
         self.rvr.enable_color_detection(is_enabled=True)
+        
         # Creates the handler for the RVR's color detection
         self.rvr.sensor_control.add_sensor_data_handler(
             service=RvrStreamingServices.color_detection,
             handler=color_detected_handler
         )
+
+        # Creates flag for when RVR detects a specific color with it's sensor
+        self.colorFlag = False
 
         # Lists out actions that the rover can take.
         # NOTE: Legend: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
@@ -48,11 +54,11 @@ class ServoingEnvironment:
         self.numStates = (self.image_divisions * len(self.blobSizeStateDict)) + 1
 
         # signifies blob is not in the visual field
-        self.no_blob = self.numStates - 1
+        self.failState = self.numStates - 1
 
         # Gets middle slice of image divisions for reward state
         self.reward_state = (((self.image_divisions)//2) * len(self.blobSizeStateDict)) + max(self.blobSizeStateDict.values())
-        self.current_state = self.no_blob
+        self.current_state = self.failState
 
         # Creates a detector for blob detection, obj holds blob params
         self.detector = createDetector()
@@ -72,14 +78,14 @@ class ServoingEnvironment:
     def reset(self, videoGetter):
         """This has the RVR place itself into a somewhat-random starting position by rotating"""
         print("RVR being reset")
-        state = self.no_blob
+        state = self.failState
         restartDriveCommand, restartLeftTrack, restartRightTrack = self.randomRestart(self.rvr)
         asyncio.run(driver(*restartDriveCommand))
         
         # The RVR will rotate until it sees a blob. (Search mode)
-        while state == self.no_blob:
+        while state == self.failState:
             state = self.get_state(videoGetter)
-            if state != self.no_blob:
+            if state != self.failState:
                 break
             asyncio.run(driver(*[self.rvr, restartLeftTrack, restartRightTrack, .2, 180, "Scanning"]))
         return state
@@ -98,8 +104,11 @@ class ServoingEnvironment:
         # Displays the frame in a new window
         cv.imshow('Frame', frame)
 
-        # Returns state dependent on if there is a blob on frame or not
-        if not np.isnan(avgXY[0]) and not np.isnan(avgSize):
+        # Returns state dependent on if there is a blob on frame or not, and
+        # whether or not the RVR drove over a color that is not allowed
+        if self.colorFlag or (np.isnan(avgXY[0]) and np.isnan(avgSize)):
+            state = self.failState   
+        else:
             # Gets the state of the x-coordinate of the blob
             blobXLocationState = int(avgXY[0]*self.image_divisions/self.image_width)
             # Gets the percentage size (blobRatio) of the blob, compared to the frame size (width)
@@ -112,17 +121,18 @@ class ServoingEnvironment:
             # Combines the blob x-coordinate state and blob size into a single state
             state = (blobXLocationState * len(self.blobSizeStateDict)) + blobSizeState
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
-        else:
-            state = self.no_blob
         return state
 
     def step(self, action, videoGetter):
         # Send action command to robot and get next state.
         driveParams = self.actions[action]
-        asyncio.run(driver(*driveParams))
+        self.colorFlag = asyncio.run(driver(*driveParams))
+        print(f"Color Flag: {self.colorFlag}")
         print(f"Driving: {driveParams[-1]}")
         print(f"Reward State: {self.reward_state}")
         new_state = self.get_state(videoGetter)
+        # Resets the colorFlag after setting the state
+        self.colorFlag = False
 
         reward = 0
         completeStatus = False
@@ -132,7 +142,7 @@ class ServoingEnvironment:
             completeStatus = True
             # reached goal. done, leds set to green
             self.rvr.led_control.set_all_leds_rgb(red=0, green=255, blue=0)
-        elif (new_state == self.no_blob):
+        elif (new_state == self.failState):
             reward = 0
             completeStatus = True
             # failed. done, leds set to red

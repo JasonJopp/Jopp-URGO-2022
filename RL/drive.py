@@ -1,5 +1,6 @@
 # -----------------------------------------------------------------------------
 # Code Purpose: Given a drive command, move a Sphero Rover using the command.
+# Returns flag based on if the RVRs color sensor detects a certain color.
 #
 # NOTE: Right now driver() uses the same speed for both left & right tracks,
 # this is not a requirement. So if you want you can add left/right speed params
@@ -11,14 +12,28 @@
 import asyncio, numpy as np, time
 from sphero_sdk import RawMotorModesEnum, Colors
 
+# This flag triggers if the RVR drives over a specific color
+colorFlag = False
+
 def color_detected_handler(color_detected_data):
-    """Gets color information from RVRs color scanner."""
+    """
+    Gets color information from RVRs color scanner, 
+    returns flag depending on if the color matches the set parameters.
+    """
+    
+    global colorFlag
+
+    # Sets detected RGB values from RVR color sensor to the rgb list variable
     rgb = [
         color_detected_data['ColorDetection']['R'],
         color_detected_data['ColorDetection']['G'],
         color_detected_data['ColorDetection']['B']
         ]
-    return rgb
+
+    # Compares sensed color to params, if it matches, sets flag to true
+    # This check if the color is red
+    if (rgb[0] > 220) and (rgb[1] < 60) and (rgb[2] < 60):
+        colorFlag = True
 
 async def driver(rvr, leftMode, rightMode, driveTime = 2, 
     speed = 64, cmdName = "Unnamed Command", colorCode = [255,255,255]):
@@ -29,6 +44,12 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     command name, and led color code (RGB) to use when driving.
     NOTE: Right/Left track modes: 0 = stop, 1 = forward, 2 = reverse
     """
+
+    # Imports global values
+    global colorFlag
+
+    # Resets colorFlag to default False value before RVR drives
+    colorFlag = False
 
     # This is the sample speed (ms) of the RVRs bottom facing color sensor
     colorSampleSpeed = 50
@@ -111,3 +132,5 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     
     # Sets rover leds to white, default waiting state
     rvr.led_control.set_all_leds_rgb(red=255, green=255, blue=255)
+
+    return colorFlag
