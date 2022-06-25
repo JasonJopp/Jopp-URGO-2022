@@ -25,7 +25,7 @@ def trainerFunc():
         stepNumber = 0
 
         print("Beginning episode",i,"...")
-        currentState = env.reset(videoGetter) # Defines initial state of the system
+        currentState = env.reset_with_beacon(videoGetter) # Defines initial state of the system
         rAll = 0 # Quantifies rewards over time
         completeStatus = False # Defines if episode succeeded or failed
 

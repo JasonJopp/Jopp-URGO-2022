@@ -5,7 +5,7 @@ from sphero_sdk import SpheroRvrObserver, Colors, RvrStreamingServices
 from videoGet import VideoGet
 
 from drive import driver, color_detected_handler
-from detector import createDetector, blobDetector
+from detector_class import Detector, pink_ball, blue_bucket
 
 class ServoingEnvironment:
 
@@ -60,8 +60,11 @@ class ServoingEnvironment:
         self.reward_state = (((self.image_divisions)//2) * len(self.blobSizeStateDict)) + max(self.blobSizeStateDict.values())
         self.current_state = self.failState
 
-        # Creates a detector for blob detection, obj holds blob params
-        self.detector = createDetector()
+        # Creates a detector for blob detection of target object
+        self.target_detector = Detector(pink_ball)
+
+        # Creates a detector for blob detection of beacon object
+        self.beacon_detector = Detector(blue_bucket)
 
     def randomRestart(self, rvr):
         # Generates a random-ish drive command for restarting the test
@@ -74,6 +77,104 @@ class ServoingEnvironment:
         random.uniform(.1,.5), 180, "Restart", [255,0,255]]
 
         return restartDrive, restartLeftTrack, restartRightTrack
+
+    def reset_with_beacon(self, videoGetter):
+        self.locate_furthest_beacon(videoGetter)
+        
+        # visually servo to beacon
+        xy, size = self.get_beacon(videoGetter)
+        print(f'Ready to servo to {size}')
+        input('pause')
+        while size == None:
+            print('acquiring beacon for servoing')
+            # it is losing the beacon
+            xy, size = self.get_beacon(videoGetter)
+
+        while size < 75:
+            input(f'in while with size {size}')
+            input('pause')
+            # determine % from center of frame (signed)
+            # -1 is at left edge and +1 at right, 0 in middle
+            error_from_center = xy[0] / (self.image_width/2) - 1
+
+            err = abs(error_from_center)
+            time = -.09*pow(err,3) + .19*pow(err,2) + .09*err + .07
+            print(f'time {time}')
+            if err <= .01:    # go straight
+                asyncio.run(driver(*[self.rvr, 1, 1, time+.05, 180, "beacon"]))
+            elif error_from_center < 0: # need to turn left
+                asyncio.run(driver(*[self.rvr, 2, 1, time, 180, "beacon"]))
+            else: # need to turn right
+                asyncio.run(driver(*[self.rvr, 1, 2, time, 180, "beacon"]))
+            
+            xy, size = self.get_beacon(videoGetter)
+            while size == None:
+                xy, size = self.get_beacon(videoGetter)
+                print('acquiring beacon')
+            print(f'after servo to {xy,size}')
+            input('pause')
+
+        # randomly move about to start
+        self.reset(videoGetter)
+
+    def locate_furthest_beacon(self,videoGetter):
+        '''
+        locate beacon farthest from current position. 
+        rotate in a circle until both beacons are located.
+        determine which is further, 
+        rotating back if necessary to make sure the beacon is in frame
+        '''
+
+        restartDriveCommand, restartLeftTrack, restartRightTrack = self.randomRestart(self.rvr)
+        
+        # rotate until a beacon is found
+        print('@@@ Rotating until first beacon is found')
+        input('pause')
+        size_first = None
+        while size_first == None:
+            xy, size_first = self.get_beacon(videoGetter)
+            if size_first != None:
+                break
+            asyncio.run(driver(*[self.rvr, restartLeftTrack, restartRightTrack, .2, 180, "Scanning"]))
+
+        # keep rotating until the beacon is not found
+        print(f'111 Rotating until first beacon is lost. size {size_first}')
+        input('pause')
+        size = size_first
+        while size != None:
+            xy, size = self.get_beacon(videoGetter)
+            if size == None:
+                break
+            asyncio.run(driver(*[self.rvr, restartLeftTrack, restartRightTrack, .2, 180, "Scanning"]))
+
+        # keep rotating until the 2nd beacon is found
+        print('222 Rotating until 2nd beacon is found')
+        input('pause')
+        size_second = None
+        while size_second == None:
+            xy, size_second = self.get_beacon(videoGetter)
+            if size_second != None:
+                break
+            asyncio.run(driver(*[self.rvr, restartLeftTrack, restartRightTrack, .2, 180, "Scanning"]))
+
+        # compare sizes and rotate to the smallest one
+        if size_first < size_second:
+            print('Going back to first beacon')
+            input('pause')
+            # reverse rotate back to first beacon
+            # lets turn a bit to make sure not seeing second beacon first
+            # exchanging the directions of RightTrack and LeftTrack
+            asyncio.run(driver(*[self.rvr, restartRightTrack, restartLeftTrack, .2, 180, "Scanning"]))
+            asyncio.run(driver(*[self.rvr, restartRightTrack, restartLeftTrack, .2, 180, "Scanning"]))
+
+            # rotate until back to first beacon
+            size = None
+            while size == None:
+                xy, size = self.get_beacon(videoGetter)
+                if size != None:
+                    break
+            asyncio.run(driver(*[self.rvr, restartRightTrack, restartLeftTrack, .2, 180, "Scanning"]))
+
     
     def reset(self, videoGetter):
         """This has the RVR place itself into a somewhat-random starting position by rotating"""
@@ -95,7 +196,9 @@ class ServoingEnvironment:
         """
         # Gets frame from videoGetter obj
         frame = videoGetter.frame
-        avgXY, avgSize = blobDetector(frame, self.detector)
+        avgXY, avgSize = self.target_detector.blob_detector(frame)
+        # testing if beacon detector was working
+        #avgXY, avgSize = self.beacon_detector.blob_detector(frame)
         
         # Draws circle on blob location, if available
         if not np.isnan(avgXY[0]):
@@ -122,6 +225,26 @@ class ServoingEnvironment:
             state = (blobXLocationState * len(self.blobSizeStateDict)) + blobSizeState
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
         return state
+
+    def get_beacon(self, videoGetter):
+        """Gets a video frame, searches for blobs in the frame using the detector,
+        """
+        # Gets frame from videoGetter obj
+        frame = videoGetter.frame
+        avgXY, avgSize = self.beacon_detector.blob_detector(frame)
+
+        cv.imshow('Frame',frame)
+
+        # If no blob, return nothing
+        if np.isnan(avgXY[0]) and np.isnan(avgSize):
+            return None,None
+        
+        # Draws circle on blob location and shows in window
+        frame = cv.circle(frame, (int(avgXY[0]), int(avgXY[1])), int(avgSize//2), (0,255,0), 3)
+        cv.imshow('Frame', frame)
+
+        # return data about the blob
+        return avgXY, avgSize
 
     def step(self, action, videoGetter):
         # Send action command to robot and get next state.
