@@ -114,7 +114,7 @@ class Detector:
         mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel)
         # Drawn rectangle allows blob detection when blob is on edge of frame
         mask = cv.rectangle(mask, (0,0), (639,479), (0,0,0), 1)
-        
+         
         # Detects blobs, creates frame for displaying blobs
         blobs = self.detector.detect(cv.bitwise_not(mask))
     
