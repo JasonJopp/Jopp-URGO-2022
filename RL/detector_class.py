@@ -26,17 +26,17 @@ pink_ball = {
     'sLow' : 80,       # Saturation low
     'sHigh' : 255,     # Saturation high
     'vLow' : 0,        # Value low
-    'vHigh' : 255     # Value high
+    'vHigh' : 255      # Value high
 }
 
 # Used for blob detection to find the blue bucket beacon
 blue_bucket = {
-    'hLow' : 75,      # Hue low
+    'hLow' : 75,       # Hue low
     'hHigh' : 110,     # Hue high
-    'sLow' : 130,       # Saturation low
+    'sLow' : 130,      # Saturation low
     'sHigh' : 255,     # Saturation high
-    'vLow' : 110,        # Value low
-    'vHigh' : 255     # Value high
+    'vLow' : 110,      # Value low
+    'vHigh' : 255      # Value high
 }
 
 
@@ -59,7 +59,6 @@ class Detector:
         Creates a detector, which holds the parameters for blob detection.
         Detector should only need to be made once after params are set.
         """
-        # Brings in global variables for blob detection (target)
         
         # Initializes thresholds for blob detection
         self.params = cv.SimpleBlobDetector_Params()
@@ -73,11 +72,11 @@ class Detector:
         self.params.maxArea = 1000000        # Maximum area of blob in pixels
         self.params.minCircularity = 0.3     # Minimum blob circularity
 
-        # The code prevents step size errors, step size must be less than than diff
-        # of vHigh and vLow, and step size cannot be zero. The larger the step size
-        # the less steps are taken during frame examination. There is a notable
-        # increase in program speed by having less steps, with no apparent drop off
-        # in blob detection capability.
+        # The code prevents step size errors, step size must be less than than 
+        # diff of vHigh and vLow, and step size cannot be zero. The larger the 
+        # step size the less steps are taken during frame examination. There is
+        # a notable increase in program speed by having less steps, with no 
+        # apparent drop off in blob detection capability.
         stepSize = abs(self.hsv_limits['vHigh']-self.hsv_limits['vLow'])
         threshStep = 254
         if (threshStep >= stepSize):
@@ -98,7 +97,7 @@ class Detector:
     def blob_detector(self,frame):
         """
         Takes a BGR frame, converts it to HSV, creates a mask,
-        then returns the coordinates of the blob found.
+        then returns the coordinates and size of the blob found.
         """
 
         # Converts BGR to HSV frame, because HSV is less sensitive to light changes
@@ -114,7 +113,7 @@ class Detector:
         mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel, iterations = 2)
         # Removes many false negatives in blob detection
         mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel)
-        # Rectangle allows blob detection when blob is on edge of frame
+        # Drawn rectangle allows blob detection when blob is on edge of frame
         mask = cv.rectangle(mask, (0,0), (639,479), (0,0,0), 1)
 
         # Detects blobs, creates frame for displaying blobs
