@@ -100,11 +100,10 @@ class Detector:
         then returns the coordinates and size of the blob found.
         """
 
-        # Converts BGR to HSV frame, because HSV is less sensitive to light changes
+        # Converts BGR to HSV frame, HSV is less sensitive to changes in light
         hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
         # Generates mask using hsvFrame, and HSV parameters
-
         mask = cv.inRange(hsvFrame,self.lows,self.highs)
 
         # Sets opening/closing of mask, look at "OpenCV Morphology" for more info
@@ -115,7 +114,7 @@ class Detector:
         mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel)
         # Drawn rectangle allows blob detection when blob is on edge of frame
         mask = cv.rectangle(mask, (0,0), (639,479), (0,0,0), 1)
-
+        
         # Detects blobs, creates frame for displaying blobs
         blobs = self.detector.detect(cv.bitwise_not(mask))
     

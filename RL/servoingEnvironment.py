@@ -1,6 +1,7 @@
 from colorsys import rgb_to_hls
 import os, sys, asyncio, numpy as np, cv2 as cv, random
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sphero-sdk-raspberrypi-python/')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+    '../../sphero-sdk-raspberrypi-python/')))
 from sphero_sdk import SpheroRvrObserver, Colors, RvrStreamingServices
 from videoGet import VideoGet
 
@@ -11,7 +12,7 @@ class ServoingEnvironment:
 
     def __init__(self) -> None:
         
-        # Creates RVR object
+        # Creates RVR (Observer) object
         self.rvr = SpheroRvrObserver()
         
         # Enables the rovers bottom facing color sensor
@@ -27,33 +28,40 @@ class ServoingEnvironment:
         self.colorFlag = False
 
         # Lists out actions that the rover can take.
-        # NOTE: Legend: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
+        # NOTE: [rvrObject, L-trk drive mode, R-trk drive mode,.. 
         # ..drive time (seconds), speed, command name, led color code]
-        # Drive Modes: 0 - Stop, 1 - Forward, 2 - Reverse
-        self.actions = []
-        self.actions.append([self.rvr, 1, 2, .15, 180, "Hard Right"])
-        self.actions.append([self.rvr, 1, 2, .1, 180, "Right"])
-        self.actions.append([self.rvr, 1, 2, .05, 180, "Soft Right"])
-        #self.actions.append([self.rvr, 1, 1, .25, 180, "Forward"])
-        #self.actions.append([self.rvr, 2, 2, .25, 180, "Reverse"])
-        self.actions.append([self.rvr, 2, 1, .05, 180, "Soft Left"])
-        self.actions.append([self.rvr, 2, 1, .1, 180, "Left"])
-        self.actions.append([self.rvr, 2, 1, .15, 180, "Hard Left"])
+        # Drive Modes: 0: Stop, 1: Forward, 2: Reverse
+        self.actions = [
+            [self.rvr, 1, 2, .15, 180, "Hard Right"],
+            [self.rvr, 1, 2, .1, 180, "Right"],
+            [self.rvr, 1, 2, .05, 180, "Soft Right"],
+            [self.rvr, 2, 1, .05, 180, "Soft Left"],
+            [self.rvr, 2, 1, .1, 180, "Left"],
+            [self.rvr, 2, 1, .15, 180, "Hard Left"]
+        ]
+        
+        # Unused but valid actions:
+        #   [self.rvr, 1, 1, .25, 180, "Forward"]
+        #   [self.rvr, 2, 2, .25, 180, "Reverse"]
 
-        # Gets number of possible actions
+
+        # Gets number of possible actions by measuring actions list length
         self.numActions = len(self.actions)
+        
+        # Sets the number of vertical bins the frame is sliced into
         self.image_divisions = 7
         
-        # Image width of video frame, can be found using OpenCV
+        # Width of video frame, can be found using an OpenCV function
         self.image_width = 640
 
-        # Used for returning the blob width state, which estimates how close a blob is
+        # This is used when assigning the blob width state. Keys are used to
+        # measure blob diameter compared to frame (%), values are the states
         self.blobSizeStateDict = {20:0, 40:1, 60:2, 80:3, 90:4, 999999:5}
 
-        # Calculates total possible states, additional state is for no blob detected
+        # Sets number of possible states, added state is for no blob detected
         self.numStates = (self.image_divisions * len(self.blobSizeStateDict)) + 1
 
-        # signifies blob is not in the visual field
+        # Signifies that blob left RVR's view, or if RVR moved out of bounds
         self.failState = self.numStates - 1
 
         # Gets middle slice of image divisions for reward state
@@ -101,11 +109,11 @@ class ServoingEnvironment:
             time = -.09*pow(err,3) + .19*pow(err,2) + .09*err + .07
             print(f'time {time}')
             if err <= .01:    # go straight
-                asyncio.run(driver(*[self.rvr, 1, 1, time+.05, 180, "beacon"]))
+                asyncio.run(driver(*[self.rvr, 1, 1, time+.05, 180, "forward beacon"]))
             elif error_from_center < 0: # need to turn left
-                asyncio.run(driver(*[self.rvr, 2, 1, time, 180, "beacon"]))
+                asyncio.run(driver(*[self.rvr, 2, 1, time, 180, "left beacon"]))
             else: # need to turn right
-                asyncio.run(driver(*[self.rvr, 1, 2, time, 180, "beacon"]))
+                asyncio.run(driver(*[self.rvr, 1, 2, time, 180, "right beacon"]))
             
             xy, size = self.get_beacon(videoGetter)
             while size == None:
@@ -192,7 +200,8 @@ class ServoingEnvironment:
         return state
     
     def get_state(self, videoGetter):
-        """Gets a video frame, searches for blobs in the frame using the detector,
+        """
+        Gets a video frame, searches for blobs in the frame using the detector.
         """
         # Gets frame from videoGetter obj
         frame = videoGetter.frame
@@ -227,12 +236,14 @@ class ServoingEnvironment:
         return state
 
     def get_beacon(self, videoGetter):
-        """Gets a video frame, searches for blobs in the frame using the detector,
+        """
+        Gets a video frame, searches for blobs in the frame using the detector.
         """
         # Gets frame from videoGetter obj
         frame = videoGetter.frame
         avgXY, avgSize = self.beacon_detector.blob_detector(frame)
 
+        #? Why is imshow called here, then called again below?
         cv.imshow('Frame',frame)
 
         # If no blob, return nothing
