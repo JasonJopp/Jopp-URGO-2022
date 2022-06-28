@@ -29,6 +29,8 @@ def color_detected_handler(color_detected_data):
         color_detected_data['ColorDetection']['G'],
         color_detected_data['ColorDetection']['B']
         ]
+        
+    print(rgb)
 
     # Compares sensed color to params, if it matches, sets flag to true
     # This check if the color is red
@@ -128,7 +130,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     rvr.sensor_control.stop()
 
     # Gives RVR time to stop before taking a photo, otherwise image is blurry
-    time.sleep(.15)
+    time.sleep(.20)
     
     # Sets rover leds to white, default waiting state
     rvr.led_control.set_all_leds_rgb(red=255, green=255, blue=255)

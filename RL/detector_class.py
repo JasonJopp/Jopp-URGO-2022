@@ -29,11 +29,30 @@ pink_ball = {
     'vHigh' : 255      # Value high
 }
 
+pink_box = {
+    'hLow' : 150,      # Hue low
+    'hHigh' : 185,     # Hue high
+    'sLow' : 80,       # Saturation low
+    'sHigh' : 255,     # Saturation high
+    'vLow' : 0,        # Value low
+    'vHigh' : 255      # Value high
+}
+
+# Used for blob detection to find the green box
+green_box = {
+    'hLow' : 55,       # Hue low
+    'hHigh' : 100,     # Hue high
+    'sLow' : 20,      # Saturation low
+    'sHigh' : 255,     # Saturation high
+    'vLow' : 0,      # Value low
+    'vHigh' : 255      # Value high
+}
+
 # Used for blob detection to find the blue bucket beacon
 blue_bucket = {
     'hLow' : 75,       # Hue low
     'hHigh' : 110,     # Hue high
-    'sLow' : 130,      # Saturation low
+    'sLow' : 155,      # Saturation low
     'sHigh' : 255,     # Saturation high
     'vLow' : 110,      # Value low
     'vHigh' : 255      # Value high
@@ -68,9 +87,9 @@ class Detector:
         self.params.minThreshold = self.hsv_limits['vLow']
         self.params.maxThreshold = self.hsv_limits['vHigh']
 
-        self.params.minArea = 100            # Minimum area of blob in pixels
-        self.params.maxArea = 1000000        # Maximum area of blob in pixels
-        self.params.minCircularity = 0.3     # Minimum blob circularity
+        self.params.minArea = 450            # Minimum area of blob in pixels
+        #self.params.maxArea = 1000000        # Maximum area of blob in pixels
+        self.params.minCircularity = 0.15     # Minimum blob circularity
 
         # The code prevents step size errors, step size must be less than than 
         # diff of vHigh and vLow, and step size cannot be zero. The larger the 

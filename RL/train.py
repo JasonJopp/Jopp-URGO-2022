@@ -11,7 +11,7 @@ Q = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8   
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 20
+numEpisodes = 100
 
 #create lists to contain total rewards and steps per episode
 rList = []
@@ -25,7 +25,7 @@ def trainerFunc():
         stepNumber = 0
 
         print("Beginning episode",i,"...")
-        currentState = env.reset_with_beacon(videoGetter) # Defines initial state of the system
+        currentState = env.reset(videoGetter) # Defines initial state of the system
         rAll = 0 # Quantifies rewards over time
         completeStatus = False # Defines if episode succeeded or failed
 
