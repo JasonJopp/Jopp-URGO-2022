@@ -53,7 +53,8 @@ def trainerFunc():
             # Get new state and reward from environment
             # Takes new step using the action 'a', gets new state, reward (1 or 0), and whether or not the episode succeeded (True/False)
             # newState,reward,completeStatus = asyncio.run(asyncio.gather(env.step(action)))
-            newState,reward,completeStatus = env.step(action, videoGetter)
+            newState, reward, completeStatus = env.step(action, videoGetter)
+            print(f"In Train, after Step(): New State: {newState}, Reward: {reward}, Complete Status {completeStatus}")
             if (reward==1):
                 # SUCCESS. update the table and start again.
                 print(f"New State: {newState}. Reward: {reward}, Goal Achieved!!\n")

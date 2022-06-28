@@ -30,9 +30,9 @@ pink_ball = {
 }
 
 pink_box = {
-    'hLow' : 150,      # Hue low
+    'hLow' : 160,      # Hue low
     'hHigh' : 185,     # Hue high
-    'sLow' : 80,       # Saturation low
+    'sLow' : 50,       # Saturation low
     'sHigh' : 255,     # Saturation high
     'vLow' : 0,        # Value low
     'vHigh' : 255      # Value high
@@ -63,8 +63,8 @@ class Detector:
     # Dictates sample size blobDetection uses when averaging coordinates & size
     sampleSize = 1
     
-    def __init__(self,hsv_limits):
-        self.hsv_limits = hsv_limits
+    def __init__(self,hsv_params):
+        self.hsv_params = hsv_params
         self.create_detector()
         # Used to calculate the rolling average of blob coordinates
         self.coords = []
@@ -84,11 +84,11 @@ class Detector:
 
         # Sets blob detection parameters to given thresholds, blobs outside of
         # the given params will not be detected as blobs.
-        self.params.minThreshold = self.hsv_limits['vLow']
-        self.params.maxThreshold = self.hsv_limits['vHigh']
+        self.params.minThreshold = self.hsv_params['vLow']
+        self.params.maxThreshold = self.hsv_params['vHigh']
 
-        self.params.minArea = 450            # Minimum area of blob in pixels
-        #self.params.maxArea = 1000000        # Maximum area of blob in pixels
+        self.params.minArea = 300            # Minimum area of blob in pixels
+        self.params.maxArea = 999999999999        # Maximum area of blob in pixels
         self.params.minCircularity = 0.15     # Minimum blob circularity
 
         # The code prevents step size errors, step size must be less than than 
@@ -96,7 +96,7 @@ class Detector:
         # step size the less steps are taken during frame examination. There is
         # a notable increase in program speed by having less steps, with no 
         # apparent drop off in blob detection capability.
-        stepSize = abs(self.hsv_limits['vHigh']-self.hsv_limits['vLow'])
+        stepSize = abs(self.hsv_params['vHigh']-self.hsv_params['vLow'])
         threshStep = 254
         if (threshStep >= stepSize):
             if stepSize < 2:
@@ -110,8 +110,8 @@ class Detector:
         self.detector = cv.SimpleBlobDetector_create(self.params)
 
         # creating tuples for limits used to generate mask for each image frame
-        self.lows = (self.hsv_limits['hLow'],self.hsv_limits['sLow'],self.hsv_limits['vLow'])
-        self.highs = (self.hsv_limits['hHigh'],self.hsv_limits['sHigh'],self.hsv_limits['vHigh'])
+        self.lows = (self.hsv_params['hLow'],self.hsv_params['sLow'],self.hsv_params['vLow'])
+        self.highs = (self.hsv_params['hHigh'],self.hsv_params['sHigh'],self.hsv_params['vHigh'])
 
     def blob_detector(self,frame):
         """
