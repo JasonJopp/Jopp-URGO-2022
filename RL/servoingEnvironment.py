@@ -187,6 +187,8 @@ class ServoingEnvironment:
         determine which is further, 
         rotating back if necessary to make sure the beacon is in frame
         '''
+        # Reverse so it moves away from the box a little after finding it.
+        asyncio.run(driver(*[self.rvr, 2, 2, .25, 180, "Reverse"]))
 
         restartDriveCommand, restartLeftTrack, restartRightTrack = self.randomRestart()
         
