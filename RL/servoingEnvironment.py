@@ -6,6 +6,7 @@ import random
 import RPi.GPIO as GPIO
 import sys
 import time
+import warnings
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
     '../../sphero-sdk-raspberrypi-python/')))
@@ -18,6 +19,9 @@ from detector_class import Detector, pink_box, blue_bucket
 class ServoingEnvironment:
 
     def __init__(self) -> None:
+        # Disables warning from GPIO, common one is the GPIO is already in use
+        GPIO.setwarnings(False)
+        
         # Set Raspi GPIO pins to specific sonar functions
         self.GPIO_TRIGGER = 23
         self.GPIO_ECHO = 24
@@ -76,20 +80,18 @@ class ServoingEnvironment:
         # Width of video frame, can be found using an OpenCV function
         self.image_width = 640
 
-        # This is used when assigning the blob width state. Keys are used to
-        # measure blob diameter compared to frame (%), values are the states
-        #self.blobSizeState = {10:0, 20:1, 90:2, 999999:3} # pink_ball
-        self.blobSizeStateList = [[20,0], [40,1], [95,2], [110,3], [999999999,4]] # green_box/pink_box
+        # This is used to decide which sonar distance state the RVR in
+        self.distanceStateDict = [[240,0], [160, 1], [80,2], [20,3], [5,4], [0,5]]
         
         # Sets number of possible states, added state is for no blob detected
-        self.numStates = (self.image_divisions * len(self.blobSizeStateList)) + 1
+        self.numStates = (self.image_divisions * len(self.distanceStateDict)) + 1
 
         # Signifies that blob left RVR's view, or if RVR moved out of bounds
         self.failState = self.numStates - 1
 
         # Gets middle slice of image divisions for reward state
         self.reward_state = (((self.image_divisions)//2) * \
-        len(self.blobSizeStateList)) + self.blobSizeStateList[-2][1]
+        len(self.distanceStateDict)) + self.distanceStateDict[-1][1]
         
         self.current_state = self.failState
 
@@ -268,8 +270,11 @@ class ServoingEnvironment:
             # Only runs sonar if blob was found
             for i in range(self.sonarSampleSize):
                 self.sonarDistances.append(self.sonarDistance())
-                # Averages sample sonar distances, ignoring nans, returns the average
-                self.avgSonarDistance = np.nanmean(self.sonarDistances)
+                # Catches mean of empty slice warning
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    # Averages sample sonar distances, ignoring nans, returns the average
+                    self.avgSonarDistance = np.nanmean(self.sonarDistances)
                 # Wipes sample sonar distances list
                 self.sonarDistances.clear()
             print(f"Sonar Distance: {self.avgSonarDistance}")
@@ -281,24 +286,20 @@ class ServoingEnvironment:
 
         # Returns state dependent on if there is a blob on frame or not, and
         # whether or not the RVR drove over a color that is not allowed
-        if self.colorFlag or (np.isnan(avgXY[0]) and np.isnan(avgSize)):
-            state = self.failState   
+        if self.colorFlag or (np.isnan(avgXY[0]) or np.isnan(self.avgSonarDistance)):
+            state = self.failState
         else:
             # Gets the state of the x-coordinate of the blob
             blobXLocationState = int(avgXY[0]*self.image_divisions/self.image_width)
-            # Gets the percentage size (blobRatio) of the blob, compared to the frame size (width)
-            blobRatio = int((avgSize/self.image_width)*100)
-            print(f"Average Size: {avgSize}")
-            print(f"Blob Ratio: {blobRatio}")
 
             # Checks blobSizeStateList to assign blobSizeState to a number based on the blobRatio
-            for blobSizeBin in self.blobSizeStateList:
-                if blobSizeBin[0] > blobRatio:
-                    self.blobSizeState = blobSizeBin[1]
+            for distanceBin in self.distanceStateDict:
+                if self.avgSonarDistance > distanceBin[0]:
+                    blobDistanceState = distanceBin[1]
                     break
             # Combines the blob x-coordinate state and blob size into a single state
-            state = (blobXLocationState * len(self.blobSizeStateList)) + self.blobSizeState
-            print(f"xLocState: {blobXLocationState}, Blob Size State: {self.blobSizeState}, Combined State: {state}")
+            state = (blobXLocationState * len(self.distanceStateDict)) + blobDistanceState
+            print(f"xLocState: {blobXLocationState}, Distance: {blobDistanceState}, Combined State: {state}")
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
         return state
 
