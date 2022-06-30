@@ -1,12 +1,11 @@
-import asyncio
-import cv2 as cv
-import numpy as np
-import os
-import random
-import RPi.GPIO as GPIO
-import sys
-import time
+# NOTE: Jopp: This was archived because it was from when we used blob size to 
+# attempt to approximate distance, it kinda works at long-ish range, but is not
+# consistent enough up close, and often gives false positives for being right 
+# next to an object purely based on it's blob size.
+# =============================================================================
 
+from colorsys import rgb_to_hls
+import os, sys, asyncio, numpy as np, cv2 as cv, random
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
     '../../sphero-sdk-raspberrypi-python/')))
 from sphero_sdk import SpheroRvrObserver, Colors, RvrStreamingServices
@@ -18,20 +17,7 @@ from detector_class import Detector, pink_box, blue_bucket
 class ServoingEnvironment:
 
     def __init__(self) -> None:
-        # Set Raspi GPIO pins to specific sonar functions
-        self.GPIO_TRIGGER = 23
-        self.GPIO_ECHO = 24
-
-        # Specifies Broadcom-chip number system is being used for GPIO
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.GPIO_TRIGGER, GPIO.OUT)
-        GPIO.setup(self.GPIO_ECHO, GPIO.IN)
-
-        # Amount of sonar readings averaged together for returned distance 
-        self.sonarSampleSize = 3
-        # Holds individual sonar distance samples before averaging
-        self.sonarDistances = []
-
+        
         # Creates RVR (Observer) object
         self.rvr = SpheroRvrObserver()
         
@@ -99,43 +85,6 @@ class ServoingEnvironment:
         # Creates a detector for blob detection of beacon object
         self.beacon_detector = Detector(blue_bucket)
 
-    def sonarDistance(self):
-        """Returns an average sonar distance, with a set sample size."""
-        time.sleep(.05)
-        GPIO.output(self.GPIO_TRIGGER, True)
-        # Set Trigger after 0.01ms to low
-        time.sleep(0.00001)
-        GPIO.output(self.GPIO_TRIGGER, False)
-        startTime = time.time()
-        stopTime = time.time()
-
-        # Saves the start time
-        breakTime = time.time()
-        while GPIO.input(self.GPIO_ECHO) == 0:
-            startTime = time.time()
-            if startTime - breakTime > .05:
-                stopTime = np.nan
-                break
-        # Saves time of arrival
-        while GPIO.input(self.GPIO_ECHO) == 1:
-            stopTime = time.time()
-            # Breaks the loop if the sonar doesn't get an echo soon enough.
-            if stopTime - startTime > .05:
-                stopTime = np.nan
-                break
-
-        # Time difference between start and end time to find travel time
-        if not np.isnan(stopTime):
-            timeDiff = stopTime - startTime
-
-            # Gets distance by multiplying timeDiff by the sonic speed (34300 cm/s)
-            # Then divide by two, because distance is send/return distance
-            sonarDistance = (timeDiff * 34300) / 2
-        else:
-            sonarDistance = np.nan
-        
-        return sonarDistance
-
     def randomRestart(self):
         # Generates a random-ish drive command for restarting the test
         restartLeftTrack = random.randint(1,2)
@@ -160,11 +109,13 @@ class ServoingEnvironment:
             xy, size = self.get_beacon(videoGetter)
 
         while size < 65:
+            print(f'in while with size {size}')
             # determine % from center of frame (signed)
             # -1 is at left edge and +1 at right, 0 in middle
             error_from_center = xy[0] / (self.image_width/2) - 1
             err = abs(error_from_center)
-            #time = .13*pow(err,3) + -.3*pow(err,2) + .33*err + -.01
+            time = .13*pow(err,3) + -.3*pow(err,2) + .33*err + -.01
+            print(f'time {time}')
             if err <= .15:    # go straight
                 asyncio.run(driver(*[self.rvr, 1, 1, .4, 180, "forward beacon", [0,0,255]]))
             elif error_from_center < 0: # need to turn left
@@ -176,7 +127,7 @@ class ServoingEnvironment:
             while size == None:
                 xy, size = self.get_beacon(videoGetter)
                 print('acquiring beacon')
-            # print(f'after servo to {xy,size}')
+            print(f'after servo to {xy,size}')
 
     def locate_furthest_beacon(self,videoGetter):
         '''
@@ -264,17 +215,6 @@ class ServoingEnvironment:
         # Draws circle on blob location, if available
         if not np.isnan(avgXY[0]):
             frame = cv.circle(frame, (int(avgXY[0]), int(avgXY[1])), int(avgSize//2), (0,255,0), 3)
-            
-            # Only runs sonar if blob was found
-            for i in range(self.sonarSampleSize):
-                self.sonarDistances.append(self.sonarDistance())
-                # Averages sample sonar distances, ignoring nans, returns the average
-                self.avgSonarDistance = np.nanmean(self.sonarDistances)
-                # Wipes sample sonar distances list
-                self.sonarDistances.clear()
-            print(f"Sonar Distance: {self.avgSonarDistance}")
-        else:
-            self.avgSonarDistance = np.nan
         
         # Displays the frame in a new window
         cv.imshow('Frame', frame)
@@ -330,7 +270,7 @@ class ServoingEnvironment:
 
         reward = 0
         completeStatus = False
-        # Debugging: print(f"Before if/else in Step(): New State: {new_state}, Reward: {reward}, Complete Status {completeStatus}")
+        print(f"Before if/else in Step(): New State: {new_state}, Reward: {reward}, Complete Status {completeStatus}")
         if (new_state == self.reward_state):
             reward = 1
             completeStatus = True
@@ -346,6 +286,6 @@ class ServoingEnvironment:
             reward = 0
             # Not done, still searching, leds set to orange
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
-        # Debugging: print(f"End of Step(): New State: {new_state}, Reward: {reward}, Complete Status {completeStatus}")
+        print(f"End of Step(): New State: {new_state}, Reward: {reward}, Complete Status {completeStatus}")
         return new_state, reward, completeStatus
 

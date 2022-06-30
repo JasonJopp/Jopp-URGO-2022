@@ -1,10 +1,10 @@
 import RPi.GPIO as GPIO
 import time
 
-# Sets GPIO mode to board/BCM
+# Specifies which number-system is being used, in this case Broadcom-chip
 GPIO.setmode(GPIO.BCM)
 
-# Set GPIO pins to specific sonar functions
+# Set Raspi GPIO pins to specific sonar functions
 GPIO_TRIGGER = 23
 GPIO_ECHO = 24
 
@@ -33,17 +33,12 @@ def sonarDistance():
         if stopTime - startTime > .05:
             break
 
-    
+    # Finds time difference between start and end time to find travel time
     timeDiff = stopTime - startTime
-    
-
 
     # Gets distance by multiplying timeDiff by the sonic speed (34300 cm/s)
     # Then divide by two, because distance is send/return distance
     distance = (timeDiff * 34300) / 2
 
     return distance
-
-while True:
-    print(sonarDistance())
 
