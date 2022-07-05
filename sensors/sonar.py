@@ -42,3 +42,5 @@ def sonarDistance():
 
     return distance
 
+while True:
+    print(sonarDistance())

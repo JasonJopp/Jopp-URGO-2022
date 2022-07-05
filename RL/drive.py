@@ -3,13 +3,15 @@
 # Returns flag based on if the RVRs color sensor detects a certain color.
 #
 # NOTE: Right now driver() uses the same speed for both left & right tracks,
-# this is not a requirement. So if you want you can add left/right speed params
-# and trying to implement gradual turning while moving forward/back.
+# this is not required. Left/right speed params can be set separately to 
+# implement gradual turning while moving forwards/backwards.
 #
 # Author(s): Jason Jopp, <your name here>
 # -----------------------------------------------------------------------------
 
-import asyncio, numpy as np, time
+import asyncio
+import numpy as np
+import time
 from sphero_sdk import RawMotorModesEnum, Colors
 
 # This flag triggers if the RVR drives over a specific color
@@ -29,11 +31,9 @@ def color_detected_handler(color_detected_data):
         color_detected_data['ColorDetection']['G'],
         color_detected_data['ColorDetection']['B']
         ]
-        
-    print(rgb)
 
     # Compares sensed color to params, if it matches, sets flag to true
-    # This check if the color is red
+    # This currently checks for color: Red
     if (rgb[0] > 220) and (rgb[1] < 60) and (rgb[2] < 60):
         colorFlag = True
 

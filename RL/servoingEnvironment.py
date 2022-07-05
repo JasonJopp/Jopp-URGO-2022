@@ -59,9 +59,10 @@ class ServoingEnvironment:
             [self.rvr, 1, 2, .15, 180, "Hard Right"],
             [self.rvr, 1, 2, .1, 180, "Right"],
             [self.rvr, 1, 2, .05, 180, "Soft Right"],
-            [self.rvr, 1, 1, .4, 160, "Fast Forward"],
-            [self.rvr, 1, 1, .2, 160, "Forward"],
-            [self.rvr, 1, 1, .1, 160, "Slow Forward"],
+            [self.rvr, 1, 1, .787, 160, "80 cm Forward"],
+            [self.rvr, 1, 1, .2535, 160, "20 cm Forward"],
+            [self.rvr, 1, 1, .158, 160, "10 cm Forward"],
+            [self.rvr, 1, 1, .102, 160, "5 cm Forward"],
             [self.rvr, 2, 1, .05, 180, "Soft Left"],
             [self.rvr, 2, 1, .1, 180, "Left"],
             [self.rvr, 2, 1, .15, 180, "Hard Left"]

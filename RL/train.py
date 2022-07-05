@@ -145,7 +145,7 @@ def main():
             if sys.argv[idx] == '-o':
                 Qout_file = sys.argv[idx+1]
         
-        # Displays what has been selected.                
+        # Displays what has been selected.   
         print(f'Using {Qin_file} for Q table.')
         print(f'Output Q table to {Qout_file}.')
     
