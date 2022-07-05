@@ -120,7 +120,7 @@ def trainerFunc(Qout_file):
         save_Q(Qout_file)
 
 def main():
-    # see if file was passed in for Q table
+    # See if file was passed in for Q table
     if len(sys.argv) > 0:
         Qin_file = None
         Qout_file = None
