@@ -13,25 +13,30 @@ Q = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8   
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 20
+numEpisodes = 40
 
-#create lists to contain total rewards and steps per episode
+# Create lists to contain total rewards and steps per episode
 rList = []
 
-# Creates VideoCapture thread
+# Creates VideoCapture thread for getting frames from camera
 videoGetter = VideoGet()
 videoGetter.start()
 
 def fill_Q(filename):
+    """
+    Fills Q Table using filename specified in cmdLine when running program.
+    """
     try:
         f = open(filename,'r')
         lines = f.read().splitlines()
         f.close()
+    
     except:
         print("ERROR opening and reading file")
         print("***** IGNORING. Starting with blank Q table.")
 
     row = 0
+
     for line in lines:
         entries = line.split()
         for column in range(env.numActions):
@@ -41,7 +46,7 @@ def fill_Q(filename):
         #print(Q)
         row += 1
     print(Q)
-    input('pause')
+    input('PAUSED, waiting for input..')
 
 def save_Q(filename):
     filename = filename+'-'+str(date.today())+'.txt'
@@ -64,9 +69,14 @@ def trainerFunc(Qout_file):
         stepNumber = 0
 
         print("Beginning episode",i,"...")
-        currentState = env.reset(videoGetter) # Defines initial state of the system
-        rAll = 0 # Quantifies rewards over time
-        completeStatus = False # Defines if episode succeeded or failed
+        # Defines initial state of the system
+        currentState = env.reset(videoGetter)
+
+        # Quantifies rewards over time
+        rAll = 0
+
+        # Defines if episode succeeded or failed
+        completeStatus = False
 
         # The Q-Table learning algorithm
         while stepNumber < 99: # Max amount of steps allowed before episode times out and fails
@@ -102,7 +112,7 @@ def trainerFunc(Qout_file):
 
             
 
-            #Update Q-Table with new knowledge
+            # Update Q-Table with new knowledge
             Q[currentState,action] = Q[currentState,action] + learningRate*(reward + gamma*np.max(Q[newState,:]) - Q[currentState,action])
             rAll += reward
             currentState = newState
@@ -120,21 +130,28 @@ def trainerFunc(Qout_file):
         save_Q(Qout_file)
 
 def main():
-    # See if file was passed in for Q table
-    if len(sys.argv) > 0:
-        Qin_file = None
-        Qout_file = None
+    # By default, Q table will not import/export without correct arguements
+    Qin_file = None
+    Qout_file = None
+
+    # Checks if filenames were passed in for Q table upon running the program
+    if len(sys.argv) > 1:
+        
+        # Uses cmdline args indexes to find input/output filenames for Q Table
         for idx in range(len(sys.argv)):
             if sys.argv[idx] == '-f':
                 Qin_file = sys.argv[idx+1]
+
             if sys.argv[idx] == '-o':
                 Qout_file = sys.argv[idx+1]
-    print(f'Using {Qin_file} for Q table.')
-    print(f'Output Q table to {Qout_file}.')
+        
+        # Displays what has been selected.                
+        print(f'Using {Qin_file} for Q table.')
+        print(f'Output Q table to {Qout_file}.')
+    
     if Qin_file:
         fill_Q(Qin_file)
     trainerFunc(Qout_file)
     
 if __name__ == "__main__":
     main()
-
