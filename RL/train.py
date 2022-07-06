@@ -11,7 +11,7 @@ env = servoingEnvironment.ServoingEnvironment()
 Q = np.zeros([env.numStates,env.numActions])
 
 # Set learning parameters
-learningRate = .8   
+learningRate = .8
 gamma = .95 # Gamma setting for updating the Q-table  
 numEpisodes = 40
 

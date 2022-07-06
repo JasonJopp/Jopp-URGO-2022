@@ -31,6 +31,7 @@ class ServoingEnvironment:
         GPIO.setup(self.GPIO_TRIGGER, GPIO.OUT)
         GPIO.setup(self.GPIO_ECHO, GPIO.IN)
 
+        # NOTE: The sonar's field of view is approx 60 degrees, 30 on each side
         # Amount of sonar readings averaged together for returned distance 
         self.sonarSampleSize = 3
         # Holds individual sonar distance samples before averaging
@@ -56,16 +57,16 @@ class ServoingEnvironment:
         # ..drive time (seconds), speed, command name, led color code]
         # Drive Modes: 0: Stop, 1: Forward, 2: Reverse
         self.actions = [
-            [self.rvr, 1, 2, .15, 180, "Hard Right"],
-            [self.rvr, 1, 2, .1, 180, "Right"],
-            [self.rvr, 1, 2, .05, 180, "Soft Right"],
-            [self.rvr, 1, 1, .787, 160, "80 cm Forward"],
-            [self.rvr, 1, 1, .2535, 160, "20 cm Forward"],
-            [self.rvr, 1, 1, .158, 160, "10 cm Forward"],
-            [self.rvr, 1, 1, .102, 160, "5 cm Forward"],
-            [self.rvr, 2, 1, .05, 180, "Soft Left"],
-            [self.rvr, 2, 1, .1, 180, "Left"],
-            [self.rvr, 2, 1, .15, 180, "Hard Left"]
+            [self.rvr, 1, 2, .15, 180,  "Hard Right"],
+            [self.rvr, 1, 2, .1, 180,   "Right"],
+            [self.rvr, 1, 2, .05, 180,  "Soft Right"],
+            [self.rvr, 1, 1, .787, 160, "Forward: 80 cm"],
+            [self.rvr, 1, 1, .2535, 160,"Forward: 20 cm"],
+            [self.rvr, 1, 1, .158, 160, "Forward: 10 cm"],
+            [self.rvr, 1, 1, .102, 160, "Forward: 5 cm"],
+            [self.rvr, 2, 1, .05, 180,  "Soft Left"],
+            [self.rvr, 2, 1, .1, 180,   "Left"],
+            [self.rvr, 2, 1, .15, 180,  "Hard Left"]
         ]
         
         # Unused but valid actions:
@@ -103,7 +104,7 @@ class ServoingEnvironment:
         self.beacon_detector = Detector(blue_bucket)
 
     def sonarDistance(self):
-        """Returns an average sonar distance, with a set sample size."""
+        """Returns an sonar distance, else returns NaN."""
         time.sleep(.05)
         GPIO.output(self.GPIO_TRIGGER, True)
         # Set Trigger after 0.01ms to low
@@ -162,24 +163,26 @@ class ServoingEnvironment:
             # it is losing the beacon
             xy, size = self.get_beacon(videoGetter)
 
-        while size < 65:
+        # While beacon is a distance from the RVR, based on beacon blob size..
+        while size < 90:
             # determine % from center of frame (signed)
             # -1 is at left edge and +1 at right, 0 in middle
             error_from_center = xy[0] / (self.image_width/2) - 1
             err = abs(error_from_center)
-            #time = .13*pow(err,3) + -.3*pow(err,2) + .33*err + -.01
-            if err <= .15:    # go straight
+            
+            # If error is small, the rover moves forward
+            if err <= .15:
                 asyncio.run(driver(*[self.rvr, 1, 1, .4, 180, "forward beacon", [0,0,255]]))
-            elif error_from_center < 0: # need to turn left
+            # If the error is higher than limit, RVR turns toward beacon
+            elif error_from_center < 0:
                 asyncio.run(driver(*[self.rvr, 2, 1, .05, 180, "left beacon", [0,0,255]]))
-            else: # need to turn right
+            else:
                 asyncio.run(driver(*[self.rvr, 1, 2, .05, 180, "right beacon", [0,0,255]]))
             
             xy, size = self.get_beacon(videoGetter)
             while size == None:
                 xy, size = self.get_beacon(videoGetter)
                 print('acquiring beacon')
-            # print(f'after servo to {xy,size}')
 
     def locate_furthest_beacon(self,videoGetter):
         '''
@@ -273,13 +276,13 @@ class ServoingEnvironment:
             # Only runs sonar if blob was found
             for i in range(self.sonarSampleSize):
                 self.sonarDistances.append(self.sonarDistance())
-                # Catches mean of empty slice warning
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", category=RuntimeWarning)
-                    # Averages sample sonar distances, ignoring nans, returns the average
-                    self.avgSonarDistance = np.nanmean(self.sonarDistances)
-                # Wipes sample sonar distances list
-                self.sonarDistances.clear()
+            # Catches mean of empty slice warning
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                # Averages sample sonar distances, ignoring nans, returns the average
+                self.avgSonarDistance = np.nanmean(self.sonarDistances)
+            # Wipes sample sonar distances list
+            self.sonarDistances.clear()
             print(f"Sonar Distance: {self.avgSonarDistance}")
         else:
             self.avgSonarDistance = np.nan
@@ -352,4 +355,3 @@ class ServoingEnvironment:
             self.rvr.led_control.set_all_leds_rgb(red=255, green=165, blue=0)
         # Debugging: print(f"End of Step(): New State: {new_state}, Reward: {reward}, Complete Status {completeStatus}")
         return new_state, reward, completeStatus
-
