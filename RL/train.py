@@ -10,6 +10,9 @@ env = servoingEnvironment.ServoingEnvironment()
 #Initialize Q-table with all zeros
 Q = np.zeros([env.numStates,env.numActions])
 
+# Track how many times the system is in each state-action entry
+Qcount = np.zeros([env.numStates,env.numActions])
+
 # Set learning parameters
 learningRate = .8
 gamma = .95 # Gamma setting for updating the Q-table  
@@ -21,6 +24,12 @@ rList = []
 # Creates VideoCapture thread for getting frames from camera
 videoGetter = VideoGet()
 videoGetter.start()
+
+def printQ(QU):
+    for state in range(env.numStates):
+        for action in range(env.numActions):
+            print(f'{QU[state][action]:>5.2f}',end=' ')
+        print()
 
 def fill_Q(filename):
     """
@@ -48,19 +57,47 @@ def fill_Q(filename):
     print(Q)
     input('PAUSED, waiting for input..')
 
-def save_Q(filename):
+def writeQ(filename, Q, threshold, ints=False):
     filename = filename+'-'+str(date.today())+'.txt'
+    # Overwriting threshold so all values print
+    threshold = -500000
+    # add space of header row to align with columns
+    print('      ',end=' ')
+    
     try:
         f = open(filename,"w")
     except:
         print('Error opening file.')
         # print Q to screen so it is not lost
         return
-
+    # Prints a header for each column
     for state in range(env.numStates):
-        for action in range(env.numActions):
-            f.write(str(Q[state][action])+' ')
-        f.write('\n')
+        # use image division state as header. determine if it is time to print
+        if state%len(env.distanceStateDict) == 0:
+            f.write(f'{(state//len(env.distanceStateDict)):>5}')
+        else:
+            # for all blob ratio states, draw a border for the table
+            f.write('_____')
+    f.write('')
+    # print the Q table values in row-column form
+    for action in range(env.numActions):
+        f.write(f'{action:>5}: ')
+        for state in range(env.numStates):
+            if Q[state,action]==0 or Q[state,action]<threshold:
+                f.write(' --- ')
+            else:
+                if ints:
+                    f.write(f'{Q[state,action]:>5.0f}')
+                else:
+                    f.write(f'{Q[state,action]:5.2f}')
+        f.write('')
+
+    #Prints the highest valued action for each state from the Q table.
+    # add some space to align with columns in printed Q table
+    f.write('    ')
+    for state in range(env.numStates):
+        f.write(f'{np.argmax(Q[state,:]):>5}')
+    f.write('')
     f.close()
 
 
@@ -114,6 +151,8 @@ def trainerFunc(Qout_file):
 
             # Update Q-Table with new knowledge
             Q[currentState,action] = Q[currentState,action] + learningRate*(reward + gamma*np.max(Q[newState,:]) - Q[currentState,action])
+            # Updates Qcount table
+            Qcount[currentState,action] += 1
             rAll += reward
             currentState = newState
 
@@ -127,7 +166,8 @@ def trainerFunc(Qout_file):
     print(np.round(np.rot90(Q), decimals=4))
     videoGetter.stop()
     if Qout_file:
-        save_Q(Qout_file)
+        # Writes the Q table and other data to selected outfile
+        writeQ(Qout_file, Q, -10)
 
 def main():
     # By default, Q table will not import/export without correct arguements
@@ -152,6 +192,7 @@ def main():
     if Qin_file:
         fill_Q(Qin_file)
     trainerFunc(Qout_file)
+    printQ(Q)
     
 if __name__ == "__main__":
     main()

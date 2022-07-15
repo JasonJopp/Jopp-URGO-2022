@@ -143,6 +143,6 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     return colorFlag
 
 rvr = SpheroRvrObserver()
-for i in range(4):
-    asyncio.run(driver(rvr, 1, 1, .787, 160))
+for i in range(5):
+    asyncio.run(driver(rvr, 1, 2, .15, 180))
     time.sleep(.25)
