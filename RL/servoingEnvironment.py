@@ -83,10 +83,10 @@ class ServoingEnvironment:
         self.image_width = 640
 
         # This is used to decide which sonar distance state the RVR in
-        self.distanceStateDict = [[240,0], [160, 1], [80,2], [20,3], [5,4], [0,5]]
+        self.distanceStateDict = [[240,0],[160,1],[80,2],[20,3],[5,4],[0,5]]
         
         # Sets number of possible states, added state is for no blob detected
-        self.numStates = (self.image_divisions * len(self.distanceStateDict)) + 1
+        self.numStates = (self.image_divisions*len(self.distanceStateDict)) + 1
 
         # Signifies that blob left RVR's view, or if RVR moved out of bounds
         self.failState = self.numStates - 1
@@ -132,7 +132,7 @@ class ServoingEnvironment:
         if not np.isnan(stopTime):
             timeDiff = stopTime - startTime
 
-            # Gets distance by multiplying timeDiff by the sonic speed (34300 cm/s)
+            # Gets distance by multiplying timeDiff by sonic speed (34300 cm/s)
             # Then divide by two, because distance is send/return distance
             sonarDistance = (timeDiff * 34300) / 2
         else:
@@ -141,7 +141,10 @@ class ServoingEnvironment:
         return sonarDistance
 
     def randomRestart(self):
-        # Generates a random-ish drive command for restarting the test
+        """
+        Generates a random-ish drive command for restarting the test,
+        also returns the track directions for the random drive command.
+        """
         restartLeftTrack = random.randint(1,2)
         if restartLeftTrack == 1:
             restartRightTrack = 2
@@ -153,6 +156,10 @@ class ServoingEnvironment:
         return restartDriveCommand, restartLeftTrack, restartRightTrack
 
     def reset_with_beacon(self, videoGetter):
+        """
+        Navigates rover back towards a beacon to reset the testing ENV.
+        """
+
         self.locate_furthest_beacon(videoGetter)
         
         # visually servo to beacon
@@ -227,7 +234,7 @@ class ServoingEnvironment:
                 break
             asyncio.run(driver(*scanDrive))
 
-        # compare sizes and rotate to the smallest one
+        # Compare beacon sizes and rotate to the smallest (furthest) beacon
         if size_first < size_second:
             print('Rotating back to smaller first beacon')
             # Rotates back towards the first beacon by swaping track modes
@@ -244,16 +251,23 @@ class ServoingEnvironment:
 
     
     def reset(self, videoGetter):
-        """This has the RVR place itself into a somewhat-random starting position by rotating"""
+        """
+        Randomly rotates RVR into a new start position after losing target
+        """
+
         print("RVR being reset")
+        # If the color flag was triggered, it resets the RVR using the beacons
         if self.colorFlag:
             self.reset_with_beacon(videoGetter) 
             self.colorFlag = False
+
         state = self.failState
+
+        # Gets a random rotation command from randomRestart, then runs command
         restartDriveCommand, restartLeftTrack, restartRightTrack = self.randomRestart()
         asyncio.run(driver(*restartDriveCommand))
         
-        # The RVR will rotate until it sees a blob. (Search mode)
+        # RVR rotates in restart direction until it sees a blob. (Search mode)
         while state == self.failState:
             state = self.get_state(videoGetter)
             if state != self.failState:
@@ -338,6 +352,8 @@ class ServoingEnvironment:
         reward = 0
         completeStatus = False
         # Debugging: print(f"Before if/else in Step(): New State: {new_state}, Reward: {reward}, Complete Status {completeStatus}")
+
+        # Sets the new state for the next episode depending on current state
         if (new_state == self.reward_state):
             reward = 1
             completeStatus = True
@@ -347,7 +363,7 @@ class ServoingEnvironment:
         elif (new_state == self.failState):
             reward = 0
             completeStatus = True
-            # failed. done, leds set to red
+            # Failed, enters new episode, sets leds to red.
             self.rvr.led_control.set_all_leds_rgb(red=255, green=0, blue=0)
         else:
             reward = 0
