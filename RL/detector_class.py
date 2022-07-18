@@ -17,7 +17,9 @@
 # Author(s): Jason Jopp, <your name here>
 # -----------------------------------------------------------------------------
 
-import cv2 as cv, numpy as np, warnings
+import cv2 as cv
+import numpy as np
+import warnings
 
 # Used set the low/high HSV colorspace values the detector searches between
 pink_ball = {
@@ -87,9 +89,9 @@ class Detector:
         self.params.minThreshold = self.hsv_params['vLow']
         self.params.maxThreshold = self.hsv_params['vHigh']
 
-        self.params.minArea = 300            # Minimum area of blob in pixels
-        self.params.maxArea = 999999999999        # Maximum area of blob in pixels
-        self.params.minCircularity = 0.15     # Minimum blob circularity
+        self.params.minArea = 300           # Minimum area of blob in pixels
+        self.params.maxArea = 999999999999  # Maximum area of blob in pixels
+        self.params.minCircularity = 0.15   # Minimum blob circularity
 
         # The code prevents step size errors, step size must be less than than 
         # diff of vHigh and vLow, and step size cannot be zero. The larger the 
@@ -109,7 +111,7 @@ class Detector:
         # Creates and returns the detector object based on the set parameters
         self.detector = cv.SimpleBlobDetector_create(self.params)
 
-        # creating tuples for limits used to generate mask for each image frame
+        # Creates tuples for limits used to generate mask for each image frame
         self.lows = (self.hsv_params['hLow'],self.hsv_params['sLow'],self.hsv_params['vLow'])
         self.highs = (self.hsv_params['hHigh'],self.hsv_params['sHigh'],self.hsv_params['vHigh'])
 
