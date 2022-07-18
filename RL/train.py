@@ -16,7 +16,7 @@ Qcount = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 40
+numEpisodes = 5
 
 # Create lists to contain total rewards and steps per episode
 rList = []
@@ -59,45 +59,56 @@ def fill_Q(filename):
 
 def writeQ(filename, Q, threshold, ints=False):
     filename = filename+'-'+str(date.today())+'.txt'
-    # Overwriting threshold so all values print
-    threshold = -500000
-    # add space of header row to align with columns
-    print('      ',end=' ')
-    
     try:
         f = open(filename,"w")
     except:
         print('Error opening file.')
         # print Q to screen so it is not lost
         return
+
+    # Overwriting threshold so all values print
+    threshold = -500000
+    # add space of header row to align with columns
+    f.write('       ')
+
     # Prints a header for each column
     for state in range(env.numStates):
         # use image division state as header. determine if it is time to print
         if state%len(env.distanceStateDict) == 0:
-            f.write(f'{(state//len(env.distanceStateDict)):>5}')
+            f.write(f'{(state//len(env.distanceStateDict)):>5} ')
         else:
             # for all blob ratio states, draw a border for the table
-            f.write('_____')
-    f.write('')
+            f.write('_____ ')
+    
+    f.write('\n')
+
     # print the Q table values in row-column form
     for action in range(env.numActions):
         f.write(f'{action:>5}: ')
         for state in range(env.numStates):
             if Q[state,action]==0 or Q[state,action]<threshold:
-                f.write(' --- ')
+                f.write(' ---  ')
             else:
                 if ints:
-                    f.write(f'{Q[state,action]:>5.0f}')
+                    f.write(f'{Q[state,action]:>5.0f} ')
                 else:
-                    f.write(f'{Q[state,action]:5.2f}')
-        f.write('')
+                    f.write(f'{Q[state,action]:5.2f} ')
+        f.write('\n')
 
     #Prints the highest valued action for each state from the Q table.
     # add some space to align with columns in printed Q table
     f.write('    ')
     for state in range(env.numStates):
         f.write(f'{np.argmax(Q[state,:]):>5}')
-    f.write('')
+    
+    f.write('\n\n')
+
+    # Writes a qTable that can be used in future tests
+    for state in range(env.numStates):
+        for action in range(env.numActions):
+            f.write(f'{Q[state][action]:>5.2f} ')
+        f.write("\n")
+
     f.close()
 
 
