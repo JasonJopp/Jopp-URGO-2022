@@ -5,6 +5,9 @@
 # NOTE: Right now driver() uses the same speed for both left & right tracks,
 # this is not required. Left/right speed params can be set separately to 
 # implement gradual turning while moving forwards/backwards.
+# 
+# NOTE: The sample rate for the color sensor maxes out at around ~50ms, and is
+# pretty inconsistent. Should be used if RVR is slow or color change consistent
 #
 # Author(s): Jason Jopp, <your name here>
 # -----------------------------------------------------------------------------
@@ -19,10 +22,10 @@ colorFlag = False
 
 def color_detected_handler(color_detected_data):
     """
-    Gets color information from RVRs color scanner, 
-    returns flag depending on if the color matches the set parameters.
+    Gets color data from RVRs color scanner, returns flag if the color matches
+    the set parameters.
     """
-    
+    # Imports global variable
     global colorFlag
 
     # Sets detected RGB values from RVR color sensor to the rgb list variable
@@ -32,9 +35,10 @@ def color_detected_handler(color_detected_data):
         color_detected_data['ColorDetection']['B']
         ]
 
-    # Compares sensed color to params, if it matches, sets flag to true
+    # Compares sensed color to setRGB, if it matches, sets flag to true
     # This currently checks for color: Red
-    if (rgb[0] > 220) and (rgb[1] < 60) and (rgb[2] < 60):
+    setRGB = [220, 60, 60]
+    if (rgb[0] > setRGB[0]) and (rgb[1] < setRGB[1]) and (rgb[2] < setRGB[2]):
         colorFlag = True
 
 async def driver(rvr, leftMode, rightMode, driveTime = 2, 
@@ -54,6 +58,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     colorFlag = False
 
     # This is the sample speed (ms) of the RVRs bottom facing color sensor
+    # NOTE: Seems to break if set much further below 50ms
     colorSampleSpeed = 50
 
     # Various checks on drive variables, must fall within these bounds to work
@@ -62,15 +67,15 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
         exit()
 
     if not (driveTime > 0):
-        print("ERROR: Invalid time entered, must be greater than zero.")
+        print("ERROR: Invalid drive time entered, must be greater than zero.")
         exit()
 
     if not (0 <= leftMode <= 2) and isinstance(leftMode, int):
-        print("ERROR: lMode was not an int between 0-2, incl.")
+        print("ERROR: lMode was not an int between 0-2, inclusive.")
         exit()
     
     if not (0 <= rightMode <= 2) and isinstance(rightMode, int):
-        print("ERROR: lMode was not an int between 0-2, incl.")
+        print("ERROR: lMode was not an int between 0-2, inclusive.")
         exit()
 
 
@@ -99,6 +104,7 @@ async def driver(rvr, leftMode, rightMode, driveTime = 2,
     rvr.sensor_control.start(interval=colorSampleSpeed)
 
     # Runs the rover amount of two second increments to meet driveTime amount
+    # NOTE: The spacing of the entries matter, and break if spaces are included
     while amountTimes > 0:   
         rvr.raw_motors(
             left_mode=leftMode,
