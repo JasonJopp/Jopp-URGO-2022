@@ -16,7 +16,7 @@ Qcount = np.zeros([env.numStates,env.numActions])
 # Set learning parameters
 learningRate = .8
 gamma = .95 # Gamma setting for updating the Q-table  
-numEpisodes = 5
+numEpisodes = 40
 
 # Create lists to contain total rewards and steps per episode
 rList = []
